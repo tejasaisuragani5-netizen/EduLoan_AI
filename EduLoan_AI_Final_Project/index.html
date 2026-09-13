@@ -908,7 +908,7 @@
           <td><strong>${v.student_id}</strong></td>
           <td>${v.document_type}</td>
           <td><strong>${v.ai_verdict}</strong></td>
-          <td>${Math.round(v.confidence || 0)}%</td>
+          <td>${v.confidence && v.confidence > 0 ? Math.round(v.confidence) + '%' : '—'}</td>
           <td><span class="status ${v.status.toLowerCase()}">${v.status}</span></td>
           <td><button class="secondary-button" style="font-size:12px; padding:4px 8px;" onclick="openScorecardModal(${v.id})">📊 View</button></td>
           <td>${actionHtml}</td>
@@ -925,12 +925,22 @@
       const isPass = record.ai_verdict === 'VERIFIED' || record.ai_verdict === 'REAL';
       const isPending = (record.status || '').toLowerCase() === 'pending';
       let rows = '';
-      (record.scorecard || []).forEach(item => {
-        rows += `<tr class="scorecard-row">
-          <td class="scorecard-cell-label">${item.label}</td>
-          <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
-        </tr>`;
-      });
+      if (record.scorecard && record.scorecard.length > 0) {
+        record.scorecard.forEach(item => {
+          rows += `<tr class="scorecard-row">
+            <td class="scorecard-cell-label">${item.label}</td>
+            <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
+          </tr>`;
+        });
+      } else {
+        rows = `
+          <tr class="scorecard-row"><td class="scorecard-cell-label">Request Type</td><td class="scorecard-cell-value">Official Document Issuance</td></tr>
+          <tr class="scorecard-row"><td class="scorecard-cell-label">Student Name</td><td class="scorecard-cell-value"><strong>${record.student_name || 'Student'}</strong></td></tr>
+          <tr class="scorecard-row"><td class="scorecard-cell-label">Register Number</td><td class="scorecard-cell-value"><strong>${record.student_id}</strong></td></tr>
+          <tr class="scorecard-row"><td class="scorecard-cell-label">Document Requested</td><td class="scorecard-cell-value">${record.document_type}</td></tr>
+          <tr class="scorecard-row"><td class="scorecard-cell-label">Status Details</td><td class="scorecard-cell-value">${record.ai_reason || 'Pending verification and issuance'}</td></tr>
+        `;
+      }
       const pendingActionBtn = isPending
         ? `<div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
              <button class="approve-button" style="padding:8px 16px; font-weight:700;" onclick="closeScorecardModal(); generateDoc(${record.request_id || record.id});">⚡ Issue Official Document & Verify</button>
@@ -945,7 +955,7 @@
             <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.ai_reason || record.reason || 'Verification complete'}</div>
           </div>
           <div class="scorecard-metrics">
-            <span class="confidence-chip">CONFIDENCE: ${Math.round(record.confidence || 0)}%</span>
+            <span class="confidence-chip">${record.confidence && record.confidence > 0 ? 'CONFIDENCE: ' + Math.round(record.confidence) + '%' : 'DIRECT REQUEST'}</span>
             <span class="status ${record.status.toLowerCase()}">${record.status}</span>
           </div>
         </div>

@@ -228,18 +228,6 @@ def create_tables():
 
             is_approved = status.lower() == "approved"
             verdict = "VERIFIED" if is_approved else "PENDING"
-            confidence = 98.5 if is_approved else 92.0
-
-            scorecard = {
-                "scorecard": [
-                    {"label": "1. Institution Identity", "value": "MATCH (VFSTR Main Campus, Vadlamudi)", "status": "pass"},
-                    {"label": "2. Student Enrollment", "value": f"MATCH ({s_name} · {pr['student_id']})", "status": "pass"},
-                    {"label": "3. Academic Standing", "value": f"MATCH ({s_course})", "status": "pass"},
-                    {"label": "4. Document Category", "value": f"MATCH ({doc_type})", "status": "pass"},
-                    {"label": "5. Issuance & Seal Status", "value": "VERIFIED (Official Sign-off Recorded)" if is_approved else "PENDING (Awaiting Institutional Sign & QR Seal)", "status": "pass" if is_approved else "review"}
-                ],
-                "barcode_info": None
-            }
 
             connection.execute("""
                 INSERT INTO verification_requests
@@ -262,16 +250,16 @@ def create_tables():
             """, (
                 pr["student_id"],
                 doc_type,
-                f"DocRequest_#{req_id}_{doc_type.replace(' ', '_')}.pdf",
+                "Awaiting Issuance" if not is_approved else f"{doc_type.replace(' ', '_')}_{pr['student_id']}_{req_id}.pdf",
                 "",
                 verdict,
-                confidence,
-                f"Official loan document request #{req_id} ({doc_type}) for {s_name}.",
-                f"Student: {s_name} | Reg: {pr['student_id']} | Course: {s_course} | Fee: ₹{s_fee:,.0f} | Purpose: {pr['description'] or 'Education Loan Application'}",
-                "Vignan Loan Verification Agent",
+                0.0,
+                f"Official document request #{req_id} ({doc_type}) submitted by {s_name}. Purpose: {pr['description'] or 'Education Loan'}.",
+                f"Student: {s_name} | Reg: {pr['student_id']} | Course: {s_course} | Purpose: {pr['description'] or 'Education Loan'}",
+                "Document Request Pipeline",
                 status,
                 req_date,
-                json.dumps(scorecard),
+                None,
                 req_id
             ))
     except Exception as e:
@@ -776,22 +764,9 @@ def create_document_request(request: DocumentRequest):
     student_dict = dict(student)
     student_name = student_dict.get("name", "Student")
     course = student_dict.get("course", "B.Tech")
-    fee = student_dict.get("total_fee", 0)
 
-    scorecard_payload = {
-        "scorecard": [
-            {"label": "1. Institution Identity", "value": "MATCH (VFSTR Main Campus, Vadlamudi)", "status": "pass"},
-            {"label": "2. Student Enrollment", "value": f"MATCH ({student_name} · {request.student_id})", "status": "pass"},
-            {"label": "3. Academic Standing", "value": f"MATCH ({course})", "status": "pass"},
-            {"label": "4. Document Category", "value": f"MATCH ({request.document_type})", "status": "pass"},
-            {"label": "5. Issuance & Seal Status", "value": "PENDING (Awaiting Institutional Sign & QR Seal)", "status": "review"}
-        ],
-        "barcode_info": None
-    }
-
-    doc_filename = f"DocRequest_#{new_id}_{request.document_type.replace(' ', '_')}.pdf"
-    doc_reason = f"Loan document request #{new_id} ({request.document_type}) submitted by {student_name}. Forwarded to institutional verification & approval."
-    doc_extracted = f"Student: {student_name} | Reg: {request.student_id} | Course: {course} | Fee: ₹{fee:,.0f} | Purpose: {request.description or 'Official Loan Application'}"
+    doc_reason = f"Official document request #{new_id} ({request.document_type}) submitted by {student_name}. Purpose: {request.description or 'Education Loan'}. Awaiting officer review."
+    doc_extracted = f"Student: {student_name} | Reg: {request.student_id} | Course: {course} | Purpose: {request.description or 'Education Loan'}"
 
     verif_cursor = connection.execute("""
         INSERT INTO verification_requests
@@ -814,16 +789,16 @@ def create_document_request(request: DocumentRequest):
     """, (
         request.student_id,
         request.document_type,
-        doc_filename,
+        "Awaiting Issuance",
         "",
         "PENDING",
-        92.0,
+        0.0,
         doc_reason,
         doc_extracted,
-        "Vignan Loan Verification Agent",
+        "Document Request Pipeline",
         "Pending",
         datetime.now().isoformat(),
-        json.dumps(scorecard_payload),
+        None,
         new_id
     ))
 
@@ -1305,23 +1280,23 @@ def generate_document(payload: GenerateDocumentRequest):
         WHERE id = ?
     """, (issued_date, payload.request_id))
 
-    # Update corresponding verification request
+    # Update corresponding verification request with real issued document details
     issued_scorecard = {
         "scorecard": [
-            {"label": "1. Institution Identity", "value": "MATCH (VFSTR Main Campus, Vadlamudi)", "status": "pass"},
-            {"label": "2. Student Enrollment", "value": f"MATCH ({request_row['name']} · {request_row['student_id']})", "status": "pass"},
-            {"label": "3. Academic Standing", "value": f"MATCH ({request_row['course']} · Year {request_row['year']})", "status": "pass"},
-            {"label": "4. Document Category", "value": f"VERIFIED ({request_row['document_type']})", "status": "pass"},
-            {"label": "5. Issuance & Seal Status", "value": f"VERIFIED (Circular Seal & QR: {verification_code})", "status": "pass"}
+            {"label": "Document Type", "value": request_row["document_type"], "status": "pass"},
+            {"label": "Student Name", "value": f"{request_row['name']} ({request_row['student_id']})", "status": "pass"},
+            {"label": "Academic Standing", "value": f"{request_row['course']}, Year {request_row['year']}", "status": "pass"},
+            {"label": "Official Seal", "value": "Applied (VFSTR Circular Seal)", "status": "pass"},
+            {"label": "Verification Code", "value": verification_code, "status": "pass"}
         ],
-        "barcode_info": {"detected": True, "type": "Official Vignan QR/Code128", "text": verification_code}
+        "barcode_info": {"detected": True, "type": "Code128 / QR Code", "text": verification_code}
     }
 
     connection.execute("""
         UPDATE verification_requests
         SET status = 'Approved',
             ai_verdict = 'VERIFIED',
-            confidence = 98.5,
+            confidence = 100.0,
             file_path = ?,
             filename = ?,
             ai_reason = ?,
@@ -1330,7 +1305,7 @@ def generate_document(payload: GenerateDocumentRequest):
     """, (
         file_path,
         file_name,
-        f"Document officially verified and issued by Vignan loan authority. Verification code: {verification_code}",
+        f"Official document issued by Vignan loan authority. Verification code: {verification_code}",
         json.dumps(issued_scorecard),
         payload.request_id,
         request_row["student_id"],
