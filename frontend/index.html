@@ -476,9 +476,22 @@
   </div>
 
   <script>
-    var API_URL = (window.location.origin && (window.location.origin.includes(':8080') || window.location.origin.includes('localhost:8080'))) 
-      ? window.location.origin 
-      : (localStorage.getItem('API_URL') || 'http://localhost:8080');
+    const CLOUDFLARE_BACKEND_URL = "https://really-ton-secretary-film.trycloudflare.com";
+
+    var API_URL = (function() {
+      if (window.location.origin && window.location.origin.includes(':8080')) {
+        return window.location.origin;
+      }
+      let saved = localStorage.getItem('API_URL');
+      if (window.location.protocol === 'https:') {
+        if (!saved || saved.startsWith('http://localhost') || saved.startsWith('http://127.0.0.1')) {
+          localStorage.setItem('API_URL', CLOUDFLARE_BACKEND_URL);
+          return CLOUDFLARE_BACKEND_URL;
+        }
+        return saved;
+      }
+      return saved || 'http://localhost:8080';
+    })();
     document.getElementById('apiBaseUrlInput').value = API_URL;
 
     function saveApiUrl() {
@@ -503,7 +516,10 @@
             dot.parentElement.style.background = '#dcfce7';
             dot.parentElement.style.color = '#166534';
           }
-          if (text) text.innerText = 'Backend Connected (' + (API_URL.includes('localhost') ? 'Port 8080' : API_URL) + ')';
+          const label = API_URL.includes('trycloudflare.com') 
+            ? 'Cloudflare HTTPS' 
+            : (API_URL.includes('localhost') ? 'Port 8080' : API_URL);
+          if (text) text.innerText = 'Backend Connected (' + label + ')';
           if (alertBox) alertBox.style.display = 'none';
           if (showToast) showNotice('Backend is connected and healthy!');
           return true;
@@ -514,9 +530,9 @@
           dot.parentElement.style.background = '#fee2e2';
           dot.parentElement.style.color = '#991b1b';
         }
-        if (text) text.innerText = 'Backend Offline / Blocked';
+        if (text) text.innerText = 'Backend Offline';
         if (showToast) showNotice('Could not connect to backend at ' + API_URL, true);
-        if (window.location.protocol === 'https:' && alertBox) {
+        if (window.location.protocol === 'https:' && alertBox && !API_URL.startsWith('https://')) {
           alertBox.style.display = 'block';
         }
         return false;
