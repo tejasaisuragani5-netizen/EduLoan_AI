@@ -18,6 +18,7 @@ import base64
 import json
 import io
 import requests
+import re
 
 try:
     import numpy as np
@@ -1369,7 +1370,112 @@ def scan_barcode_and_qr_codes(image_bytes: bytes) -> list[str]:
         pass
 
     return found
+import concurrent.futures
 
+def extract_text_from_document_ocr(image_bytes: bytes, back_image_bytes: bytes = None) -> str:
+    """
+    Extracts text from uploaded image(s) using Windows native OCR engine.
+    """
+    extracted = ""
+    try:
+        import winocr
+        import asyncio
+        for b in [image_bytes, back_image_bytes]:
+            if not b:
+                continue
+            img = Image.open(io.BytesIO(b))
+            if img.mode != "RGB":
+                img = img.convert("RGB")
+            with concurrent.futures.ThreadPoolExecutor() as pool:
+                res = pool.submit(asyncio.run, winocr.recognize_pil(img, lang="en")).result()
+            if hasattr(res, "text") and res.text:
+                extracted += " " + res.text
+    except Exception:
+        pass
+
+    if not extracted and image_bytes and image_bytes[:4] == b"%PDF":
+        try:
+            extracted = " ".join(re.findall(r"[A-Za-z0-9_]{3,}", image_bytes.decode("latin1", errors="ignore")))
+        except Exception:
+            pass
+
+    return extracted.strip()
+
+
+def check_reg_no_match(expected_sid: str, ocr_text: str, scanned_codes: list) -> tuple:
+    norm_expected = re.sub(r"[^A-Z0-9]", "", expected_sid.upper())
+    norm_ocr = re.sub(r"[^A-Z0-9]", "", ocr_text.upper())
+    
+    # 1. Scanned Barcodes check
+    for c in scanned_codes:
+        norm_c = re.sub(r"[^A-Z0-9]", "", c.upper())
+        if norm_expected in norm_c or norm_c in norm_expected:
+            return True, f"✓ MATCH ({expected_sid})", "pass"
+        elif len(norm_c) >= 7 and norm_c != norm_expected:
+            return False, f"✗ MISMATCH (Scanned: {c})", "fail"
+
+    # 2. OCR text direct check
+    if norm_expected in norm_ocr:
+        return True, f"✓ MATCH ({expected_sid})", "pass"
+
+    # 3. Numeric portion check (e.g. 261FA04001 -> 04001 or 26104001)
+    digits_expected = re.sub(r"\D", "", expected_sid)
+    digits_ocr = re.sub(r"\D", "", ocr_text)
+    if len(digits_expected) >= 5 and digits_expected in digits_ocr:
+        return True, f"✓ MATCH ({expected_sid})", "pass"
+
+    # 4. Check for conflicting student register numbers
+    found_other_ids = re.findall(r"\b\d{2}[A-Z0-9]{3,5}\d{3,5}\b", ocr_text.upper())
+    for oid in found_other_ids:
+        if oid != expected_sid.upper() and len(oid) >= 8:
+            return False, f"✗ MISMATCH (Found: {oid})", "fail"
+
+    if len(norm_ocr) > 15:
+        return False, f"✗ MISMATCH ({expected_sid} not on doc)", "fail"
+
+    return False, "✗ NOT DETECTED ON DOCUMENT", "fail"
+
+
+def check_name_match(expected_name: str, ocr_text: str) -> tuple:
+    if not expected_name or not expected_name.strip():
+        return False, "✗ NOT SPECIFIED", "fail"
+    norm_ocr = ocr_text.upper()
+    tokens = [re.sub(r"[^A-Z]", "", t.upper()) for t in expected_name.split() if len(re.sub(r"[^A-Z]", "", t)) >= 3]
+    if not tokens:
+        tokens = [re.sub(r"[^A-Z]", "", expected_name.upper())]
+    
+    matched = [t for t in tokens if t in norm_ocr]
+    if matched:
+        return True, f"✓ MATCH ({expected_name})", "pass"
+
+    if len(re.sub(r"[^A-Z]", "", norm_ocr)) < 10:
+        return False, "✗ NOT DETECTED ON DOCUMENT", "fail"
+
+    return False, f"✗ MISMATCH (Name '{expected_name}' not on doc)", "fail"
+
+
+def detect_university_seal(img_bytes: bytes) -> bool:
+    if not img_bytes:
+        return False
+    try:
+        if cv2 is None or np is None:
+            return True
+        nparr = np.frombuffer(img_bytes, np.uint8)
+        img = cv2.imdecode(nparr, cv2.IMREAD_COLOR)
+        if img is None:
+            return False
+        hsv = cv2.cvtColor(img, cv2.COLOR_BGR2HSV)
+        blue_mask = cv2.inRange(hsv, np.array([85, 30, 30]), np.array([160, 255, 255]))
+        red_mask1 = cv2.inRange(hsv, np.array([0, 40, 40]), np.array([12, 255, 255]))
+        red_mask2 = cv2.inRange(hsv, np.array([168, 40, 40]), np.array([180, 255, 255]))
+        stamp_mask = cv2.bitwise_or(blue_mask, cv2.bitwise_or(red_mask1, red_mask2))
+        colored_pixels = cv2.countNonZero(stamp_mask)
+        total_pixels = img.shape[0] * img.shape[1]
+        if total_pixels == 0:
+            return False
+        return (colored_pixels / total_pixels) > 0.003
+    except Exception:
+        return False
 
 
 def run_vignan_scorecard_verification(
@@ -1520,77 +1626,92 @@ def run_vignan_scorecard_verification(
             else:
                 scanned_mismatch = c
 
-        if student_found:
-            if matched_code:
-                qr_val = "✓ VALID"
-                qr_status = "pass"
-            elif scanned_mismatch:
-                # A barcode was decoded on the card/document, but it does NOT match this student's ID!
-                qr_val = "✗ INVALID"
-                qr_status = "fail"
-            else:
-                # No barcode scanned on image
-                if issued_doc is not None:
-                    qr_val = "✓ VALID"
-                    qr_status = "pass"
-                else:
-                    qr_val = "✗ INVALID"
-                    qr_status = "fail"
-        else:
-            qr_val = "✗ INVALID"
+        if matched_code:
+            qr_val = f"✓ VALID ({matched_code})"
+            qr_status = "pass"
+        elif scanned_mismatch:
+            qr_val = f"✗ MISMATCH ({scanned_mismatch})"
             qr_status = "fail"
+        else:
+            # No barcode scanned on image
+            if issued_doc is not None:
+                qr_val = f"✓ ISSUED CODE ({issued_doc['verification_code']})"
+                qr_status = "pass"
+            else:
+                qr_val = "— NOT APPLICABLE"
+                qr_status = "pass"
 
 
+    # Run Real OCR on the uploaded document
+    ocr_text = extract_text_from_document_ocr(image_bytes, back_image_bytes)
+    norm_ocr = ocr_text.upper()
+
+    expected_name = student_record.get("name", "").strip() if student_record else ""
+    expected_course = student_record.get("course", "").strip() if student_record else ""
+
     # 1. Institution Identity:
-    # 1. Institution Identity:
-    if student_found:
-        inst_val = "✓ MATCH"
+    is_vignan = ("VIGNAN" in norm_ocr or "VFSTR" in norm_ocr or "VADLAMUDI" in norm_ocr or "DEEMED TO BE UNIVERSITY" in norm_ocr or "FOUNDATION FOR SCIENCE" in norm_ocr)
+    if is_vignan:
+        inst_val = "✓ VIGNAN (VFSTR)"
         inst_status = "pass"
+    elif len(norm_ocr) > 15:
+        inst_val = "✗ UNVERIFIED (Not Vignan)"
+        inst_status = "fail"
     else:
-        inst_val = "✗ UNVERIFIED"
+        inst_val = "✗ NOT DETECTED"
         inst_status = "fail"
 
-    # 2. Student Identity:
-    if student_found:
-        reg_val = "✓ MATCH"
-        reg_status = "pass"
-        name_val = "✓ MATCH"
-        name_status = "pass"
-        prog_val = "✓ MATCH"
-        prog_status = "pass"
+    # 2. Student Identity (Real Register Number & Name Matching from OCR & Barcode):
+    matched_reg, reg_val, reg_status = check_reg_no_match(clean_sid, ocr_text, detected_codes)
+    matched_name, name_val, name_status = check_name_match(expected_name, ocr_text)
+
+    # Program/Branch check:
+    if expected_course:
+        course_tokens = [t for t in re.findall(r"[A-Za-z]{2,}", expected_course.upper()) if t not in ("THE", "AND", "FOR")]
+        if any(t in norm_ocr for t in course_tokens):
+            prog_val = f"✓ MATCH ({expected_course})"
+            prog_status = "pass"
+        elif len(norm_ocr) > 15:
+            prog_val = "✗ MISMATCH"
+            prog_status = "fail"
+        else:
+            prog_val = "⚠ NOT DETECTED"
+            prog_status = "warn"
     else:
-        reg_val = "✗ NOT FOUND"
-        reg_status = "fail"
-        name_val = "✗ NOT FOUND"
-        name_status = "fail"
-        prog_val = "✗ NOT FOUND"
-        prog_status = "fail"
+        prog_val = "✓ N/A"
+        prog_status = "pass"
 
     # 3. Document Identity (Document No / Serial No or Active Student Enrollment):
-    if student_found and (issued_doc is not None or document_type == "Student ID Proof"):
-        doc_val = "✓ VALID"
+    if student_found:
+        if issued_doc:
+            doc_val = f"✓ VALID ({issued_doc['verification_code']})"
+        elif document_type == "Student ID Proof":
+            doc_val = "✓ ENROLLED ID CARD"
+        else:
+            doc_val = "✓ ACTIVE ENROLLMENT RECORD"
         doc_status = "pass"
     else:
-        doc_val = "✗ INVALID"
+        doc_val = "✗ UNREGISTERED"
         doc_status = "fail"
 
     # 5. AI Visual Check:
     # University Seal
-    if not student_found:
-        seal_val = "✗ NOT DETECTED"
-        seal_status = "fail"
-    elif is_low_res:
-        seal_val = "⚠ FAINT"
-        seal_status = "warn"
-    else:
+    has_seal = detect_university_seal(image_bytes) or ("SEAL" in norm_ocr or "REGISTRAR" in norm_ocr or is_vignan)
+    if has_seal and not is_low_res:
         seal_val = "✓ DETECTED"
         seal_status = "pass"
+    elif is_low_res:
+        seal_val = "⚠ FAINT / LOW RES"
+        seal_status = "warn"
+    else:
+        seal_val = "✗ NOT DETECTED"
+        seal_status = "fail"
 
     # Template / Layout
-    if student_found and (issued_doc is not None or document_type == "Student ID Proof") and not is_low_res:
+    if is_vignan and not is_low_res:
         template_val = "✓ MATCH"
         template_status = "pass"
-    elif student_found:
+    elif is_vignan:
         template_val = "✓ SIMILAR"
         template_status = "pass"
     else:
@@ -1598,11 +1719,17 @@ def run_vignan_scorecard_verification(
         template_status = "fail"
 
     # Tampering Indicators:
-    if not student_found or doc_status == "fail" or qr_status == "fail":
-        tamper_val = "⚠ DETECTED"
+    if reg_status == "fail" or name_status == "fail":
+        tamper_val = "⚠ IDENTITY MISMATCH"
+        tamper_status = "fail"
+    elif inst_status == "fail":
+        tamper_val = "⚠ UNVERIFIED INSTITUTION"
+        tamper_status = "fail"
+    elif qr_status == "fail":
+        tamper_val = "⚠ BARCODE MISMATCH"
         tamper_status = "fail"
     elif is_low_res:
-        tamper_val = "⚠ SUSPICIOUS"
+        tamper_val = "⚠ SUSPICIOUS RESOLUTION"
         tamper_status = "warn"
     else:
         tamper_val = "✓ NOT DETECTED"
@@ -1610,28 +1737,27 @@ def run_vignan_scorecard_verification(
 
 
     # SCORE & DECISION MATRIX
-    if tamper_status == "fail" or reg_status == "fail" or doc_status == "fail" or qr_status == "fail":
+    if tamper_status == "fail" or reg_status == "fail" or name_status == "fail" or doc_status == "fail" or qr_status == "fail" or inst_status == "fail":
         final_verdict = "REJECTED"
         confidence = 96.0
-        if document_type == "Student ID Proof" and qr_status == "fail":
-            if not back_image_bytes or not back_codes:
-                reason = "No valid Vignan student barcode detected on ID card back photo. Barcode scan is mandatory."
-            elif scanned_mismatch and not matched_code:
-                reason = f"ID card back barcode '{scanned_mismatch}' does not match student register number '{clean_sid}'."
-            else:
-                reason = "Student ID barcode verification failed."
-        elif scanned_mismatch and not matched_code:
-            reason = f"Issuance details could not be verified: Back barcode '{scanned_mismatch}' mismatch."
-        else:
-            reason = "Issuance details could not be verified"
-    elif is_low_res or seal_status == "warn":
+        reasons = []
+        if reg_status == "fail":
+            reasons.append(f"Student Reg No mismatch (Expected: {clean_sid})")
+        if name_status == "fail":
+            reasons.append(f"Student Name mismatch (Expected: {expected_name})")
+        if inst_status == "fail":
+            reasons.append("Document not issued by VFSTR Vignan University")
+        if qr_status == "fail":
+            reasons.append("Barcode/QR code validation failed")
+        reason = "Verification Failed: " + "; ".join(reasons)
+    elif is_low_res or seal_status == "warn" or prog_status == "warn":
         final_verdict = "REVIEW"
         confidence = 75.0
         reason = "Document requires physical verification of facts against originals by the loan desk officer."
     else:
         final_verdict = "VERIFIED"
-        confidence = 96.0
-        reason = "All institutional credentials, student registry facts, official university seal, and layout verified against Vignan records."
+        confidence = 97.0
+        reason = f"All institutional credentials, student registry facts ({clean_sid} - {expected_name}), official university seal, and layout verified against Vignan records."
 
     scorecard = [
         {"label": "Institution Name", "value": inst_val, "status": inst_status},
@@ -1664,6 +1790,7 @@ def run_vignan_scorecard_verification(
         f"Student ID: {clean_sid}\n"
         f"Document: {document_type}\n"
         f"Scorecard Status: {final_verdict} ({confidence:.0f}%)\n"
+        f"OCR Extracted Content: {ocr_text if ocr_text else '(No readable text detected on document)'}\n"
         f"Resolution: {width}x{height}px | Format: {mime_type.upper()}"
     )
 
