@@ -707,9 +707,13 @@
           body: JSON.stringify(data)
         });
         if (res.ok) {
-          showNotice('Document request submitted successfully!');
+          showNotice('Document request submitted and forwarded to Verification pipeline!');
           form.reset();
-          loadRequests();
+          await Promise.all([
+            loadRequests(),
+            loadVerificationRequests(),
+            updateStats()
+          ]);
         } else {
           const err = await res.json();
           showNotice(err.detail || 'Failed to submit request', true);
@@ -727,11 +731,20 @@
           body: JSON.stringify({ request_id: reqId })
         });
         if (res.ok) {
-          showNotice('Document generated with official circular seal!');
-          loadRequests();
-          loadDocuments();
+          showNotice('Document officially issued with circular seal & verified!');
+          await Promise.all([
+            loadRequests(),
+            loadDocuments(),
+            loadVerificationRequests(),
+            updateStats()
+          ]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to generate document', true);
         }
-      } catch (e) {}
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
     }
 
     async function loadDocuments() {
@@ -881,8 +894,15 @@
         container.innerHTML = '<p class="empty">No verification scans performed yet.</p>';
         return;
       }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Doc Type</th><th>Verdict</th><th>Confidence</th><th>Status</th><th>Scorecard</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Doc Type</th><th>Verdict</th><th>Confidence</th><th>Status</th><th>Scorecard</th><th>Action</th></tr></thead><tbody>';
       state.verifications.forEach(v => {
+        const isPending = (v.status || '').toLowerCase() === 'pending';
+        const isApproved = (v.status || '').toLowerCase() === 'approved';
+        const actionHtml = isPending
+          ? `<button class="approve-button" style="font-size:12px; padding:4px 8px;" onclick="generateDoc(${v.request_id || v.id})" title="Issue and verify official document">⚡ Issue Doc</button>`
+          : isApproved
+            ? `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Verified</span>`
+            : `<span style="color:#991b1b; font-weight:700; font-size:12px;">✗ ${v.status}</span>`;
         html += `<tr>
           <td>#${v.id}</td>
           <td><strong>${v.student_id}</strong></td>
@@ -891,6 +911,7 @@
           <td>${Math.round(v.confidence || 0)}%</td>
           <td><span class="status ${v.status.toLowerCase()}">${v.status}</span></td>
           <td><button class="secondary-button" style="font-size:12px; padding:4px 8px;" onclick="openScorecardModal(${v.id})">📊 View</button></td>
+          <td>${actionHtml}</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -902,6 +923,7 @@
       if (!record) return;
       document.getElementById('modalSubtitle').innerText = `Record #${record.id} — ${record.student_name || 'Student'} (${record.student_id})`;
       const isPass = record.ai_verdict === 'VERIFIED' || record.ai_verdict === 'REAL';
+      const isPending = (record.status || '').toLowerCase() === 'pending';
       let rows = '';
       (record.scorecard || []).forEach(item => {
         rows += `<tr class="scorecard-row">
@@ -909,19 +931,25 @@
           <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
         </tr>`;
       });
+      const pendingActionBtn = isPending
+        ? `<div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+             <button class="approve-button" style="padding:8px 16px; font-weight:700;" onclick="closeScorecardModal(); generateDoc(${record.request_id || record.id});">⚡ Issue Official Document & Verify</button>
+           </div>`
+        : '';
       document.getElementById('modalScorecardBody').innerHTML = `
         <table class="scorecard-table"><tbody>${rows}</tbody></table>
-        <div class="scorecard-decision-banner ${isPass ? 'verified' : 'rejected'}" style="margin-top:14px;">
+        <div class="scorecard-decision-banner ${isPass ? 'verified' : isPending ? 'review' : 'rejected'}" style="margin-top:14px;">
           <div class="scorecard-final-verdict">
             <span class="final-tag">FINAL VERIFICATION RESULT</span>
             <span class="final-status-text">FINAL: ${record.ai_verdict}</span>
-            <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.reason || 'Verification complete'}</div>
+            <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.ai_reason || record.reason || 'Verification complete'}</div>
           </div>
           <div class="scorecard-metrics">
             <span class="confidence-chip">CONFIDENCE: ${Math.round(record.confidence || 0)}%</span>
             <span class="status ${record.status.toLowerCase()}">${record.status}</span>
           </div>
         </div>
+        ${pendingActionBtn}
       `;
       document.getElementById('scorecardModal').classList.remove('hidden');
     }

@@ -79,6 +79,10 @@
       <div class="sub-actions-left">
         <button type="button" class="run-agent-btn" onclick="switchTab('Verification')">▶ Run Verification Agent</button>
         <span class="ai-active-pill"><span class="status-dot"></span>AI Monitoring Active</span>
+        <div id="backendConnectionBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; cursor:pointer;" onclick="checkBackendHealth(true)" title="Click to test backend connection">
+          <span id="backendStatusDot" style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
+          <span id="backendStatusText">Checking Backend...</span>
+        </div>
         <span class="vignan-branch-pill">VFSTR Main Campus · Vadlamudi</span>
       </div>
       <div class="last-sync-text">
@@ -116,6 +120,27 @@
       <!-- MAIN CONTENT -->
       <main class="main">
         <div id="notificationMsg" style="display:none; padding: 12px 18px; margin-bottom: 16px; border-radius: 8px; font-weight: 600;"></div>
+
+        <!-- Mixed Content Warning for GitHub Pages / HTTPS -->
+        <div id="httpsMixedContentAlert" style="display:none; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 18px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <div style="font-size:24px; line-height:1;">⚠️</div>
+            <div style="flex:1;">
+              <div style="font-size:15px; font-weight:700; color:#9a3412; margin-bottom:4px;">
+                Browser HTTPS Restriction: Mixed Content Blocked
+              </div>
+              <p style="font-size:13px; color:#7c2d12; margin:0 0 10px 0; line-height:1.5;">
+                You are viewing this portal on <b>GitHub Pages (HTTPS)</b>. Web browsers block HTTPS pages from communicating directly with local HTTP servers (<code>http://localhost:8080</code>).
+              </p>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <a href="http://localhost:8080" target="_blank" style="background:#0f2042; color:#ffffff; font-weight:700; font-size:13px; padding:8px 16px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                  👉 Open 100% Connected Local Portal (http://localhost:8080)
+                </a>
+                <span style="font-size:12px; color:#6b7280;">or in Chrome: Click 🔒 Lock icon next to URL &rarr; <b>Site settings</b> &rarr; <b>Insecure content</b> &rarr; <b>Allow</b>, then refresh this page.</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- 1. DASHBOARD -->
         <section id="page-Dashboard">
@@ -451,16 +476,66 @@
   </div>
 
   <script>
-    let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
+    const CLOUDFLARE_BACKEND_URL = "https://really-ton-secretary-film.trycloudflare.com";
+
+    var API_URL = (function() {
+      if (window.location.origin && window.location.origin.includes(':8080')) {
+        return window.location.origin;
+      }
+      let saved = localStorage.getItem('API_URL');
+      if (window.location.protocol === 'https:') {
+        if (!saved || saved.startsWith('http://localhost') || saved.startsWith('http://127.0.0.1')) {
+          localStorage.setItem('API_URL', CLOUDFLARE_BACKEND_URL);
+          return CLOUDFLARE_BACKEND_URL;
+        }
+        return saved;
+      }
+      return saved || 'http://localhost:8080';
+    })();
     document.getElementById('apiBaseUrlInput').value = API_URL;
 
     function saveApiUrl() {
       const val = document.getElementById('apiBaseUrlInput').value.trim();
       if (val) {
-        API_URL = val;
-        localStorage.setItem('API_URL', val);
-        showNotice('API URL updated: ' + val);
+        API_URL = val.replace(/\/+$/, '');
+        localStorage.setItem('API_URL', API_URL);
+        showNotice('API URL updated: ' + API_URL);
         refreshAll();
+      }
+    }
+
+    async function checkBackendHealth(showToast = false) {
+      const dot = document.getElementById('backendStatusDot');
+      const text = document.getElementById('backendStatusText');
+      const alertBox = document.getElementById('httpsMixedContentAlert');
+      try {
+        const res = await fetch(API_URL + '/health', { cache: 'no-store' });
+        if (res.ok) {
+          if (dot) {
+            dot.style.background = '#16a34a';
+            dot.parentElement.style.background = '#dcfce7';
+            dot.parentElement.style.color = '#166534';
+          }
+          const label = API_URL.includes('trycloudflare.com') 
+            ? 'Cloudflare HTTPS' 
+            : (API_URL.includes('localhost') ? 'Port 8080' : API_URL);
+          if (text) text.innerText = 'Backend Connected (' + label + ')';
+          if (alertBox) alertBox.style.display = 'none';
+          if (showToast) showNotice('Backend is connected and healthy!');
+          return true;
+        }
+      } catch (err) {
+        if (dot) {
+          dot.style.background = '#dc2626';
+          dot.parentElement.style.background = '#fee2e2';
+          dot.parentElement.style.color = '#991b1b';
+        }
+        if (text) text.innerText = 'Backend Offline';
+        if (showToast) showNotice('Could not connect to backend at ' + API_URL, true);
+        if (window.location.protocol === 'https:' && alertBox && !API_URL.startsWith('https://')) {
+          alertBox.style.display = 'block';
+        }
+        return false;
       }
     }
 
@@ -495,6 +570,7 @@
     }
 
     async function refreshAll() {
+      await checkBackendHealth();
       await Promise.all([
         loadStudents(),
         loadRequests(),
@@ -631,9 +707,13 @@
           body: JSON.stringify(data)
         });
         if (res.ok) {
-          showNotice('Document request submitted successfully!');
+          showNotice('Document request submitted and forwarded to Verification pipeline!');
           form.reset();
-          loadRequests();
+          await Promise.all([
+            loadRequests(),
+            loadVerificationRequests(),
+            updateStats()
+          ]);
         } else {
           const err = await res.json();
           showNotice(err.detail || 'Failed to submit request', true);
@@ -651,11 +731,20 @@
           body: JSON.stringify({ request_id: reqId })
         });
         if (res.ok) {
-          showNotice('Document generated with official circular seal!');
-          loadRequests();
-          loadDocuments();
+          showNotice('Document officially issued with circular seal & verified!');
+          await Promise.all([
+            loadRequests(),
+            loadDocuments(),
+            loadVerificationRequests(),
+            updateStats()
+          ]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to generate document', true);
         }
-      } catch (e) {}
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
     }
 
     async function loadDocuments() {
@@ -805,8 +894,15 @@
         container.innerHTML = '<p class="empty">No verification scans performed yet.</p>';
         return;
       }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Doc Type</th><th>Verdict</th><th>Confidence</th><th>Status</th><th>Scorecard</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Doc Type</th><th>Verdict</th><th>Confidence</th><th>Status</th><th>Scorecard</th><th>Action</th></tr></thead><tbody>';
       state.verifications.forEach(v => {
+        const isPending = (v.status || '').toLowerCase() === 'pending';
+        const isApproved = (v.status || '').toLowerCase() === 'approved';
+        const actionHtml = isPending
+          ? `<button class="approve-button" style="font-size:12px; padding:4px 8px;" onclick="generateDoc(${v.request_id || v.id})" title="Issue and verify official document">⚡ Issue Doc</button>`
+          : isApproved
+            ? `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Verified</span>`
+            : `<span style="color:#991b1b; font-weight:700; font-size:12px;">✗ ${v.status}</span>`;
         html += `<tr>
           <td>#${v.id}</td>
           <td><strong>${v.student_id}</strong></td>
@@ -815,6 +911,7 @@
           <td>${Math.round(v.confidence || 0)}%</td>
           <td><span class="status ${v.status.toLowerCase()}">${v.status}</span></td>
           <td><button class="secondary-button" style="font-size:12px; padding:4px 8px;" onclick="openScorecardModal(${v.id})">📊 View</button></td>
+          <td>${actionHtml}</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -826,6 +923,7 @@
       if (!record) return;
       document.getElementById('modalSubtitle').innerText = `Record #${record.id} — ${record.student_name || 'Student'} (${record.student_id})`;
       const isPass = record.ai_verdict === 'VERIFIED' || record.ai_verdict === 'REAL';
+      const isPending = (record.status || '').toLowerCase() === 'pending';
       let rows = '';
       (record.scorecard || []).forEach(item => {
         rows += `<tr class="scorecard-row">
@@ -833,19 +931,25 @@
           <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
         </tr>`;
       });
+      const pendingActionBtn = isPending
+        ? `<div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
+             <button class="approve-button" style="padding:8px 16px; font-weight:700;" onclick="closeScorecardModal(); generateDoc(${record.request_id || record.id});">⚡ Issue Official Document & Verify</button>
+           </div>`
+        : '';
       document.getElementById('modalScorecardBody').innerHTML = `
         <table class="scorecard-table"><tbody>${rows}</tbody></table>
-        <div class="scorecard-decision-banner ${isPass ? 'verified' : 'rejected'}" style="margin-top:14px;">
+        <div class="scorecard-decision-banner ${isPass ? 'verified' : isPending ? 'review' : 'rejected'}" style="margin-top:14px;">
           <div class="scorecard-final-verdict">
             <span class="final-tag">FINAL VERIFICATION RESULT</span>
             <span class="final-status-text">FINAL: ${record.ai_verdict}</span>
-            <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.reason || 'Verification complete'}</div>
+            <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.ai_reason || record.reason || 'Verification complete'}</div>
           </div>
           <div class="scorecard-metrics">
             <span class="confidence-chip">CONFIDENCE: ${Math.round(record.confidence || 0)}%</span>
             <span class="status ${record.status.toLowerCase()}">${record.status}</span>
           </div>
         </div>
+        ${pendingActionBtn}
       `;
       document.getElementById('scorecardModal').classList.remove('hidden');
     }
