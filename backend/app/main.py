@@ -270,12 +270,43 @@ def mask_key(key: str) -> str:
 # HOME & HEALTH
 # =================================================
 
+_frontend_search_dirs = [
+    os.path.join(os.path.dirname(os.path.dirname(os.path.dirname(os.path.abspath(__file__)))), "frontend"),
+    os.path.join(os.path.dirname(os.path.dirname(os.path.abspath(__file__))), "frontend"),
+    os.path.join(os.path.abspath("."), "frontend"),
+]
+
+def _resolve_frontend_asset(filename: str):
+    for d in _frontend_search_dirs:
+        candidate = os.path.join(d, filename)
+        if os.path.exists(candidate):
+            return candidate
+    return None
+
 @app.get("/")
 def home():
-
+    index_path = _resolve_frontend_asset("index.html")
+    if index_path:
+        return FileResponse(index_path)
     return {
-        "message": "Education Loan Support Agent Backend is running"
+        "message": "Education Loan Support Agent Backend is running",
+        "docs": "/docs",
+        "health": "/health"
     }
+
+@app.get("/globals.css")
+def serve_portal_css():
+    css_path = _resolve_frontend_asset("globals.css")
+    if css_path:
+        return FileResponse(css_path, media_type="text/css")
+    return {"error": "globals.css not found"}
+
+@app.get("/vignan-logo.png")
+def serve_portal_logo():
+    logo_path = _resolve_frontend_asset("vignan-logo.png")
+    if logo_path:
+        return FileResponse(logo_path, media_type="image/png")
+    return {"error": "vignan-logo.png not found"}
 
 
 @app.get("/health")

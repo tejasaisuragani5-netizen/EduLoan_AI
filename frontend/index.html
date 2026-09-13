@@ -79,6 +79,10 @@
       <div class="sub-actions-left">
         <button type="button" class="run-agent-btn" onclick="switchTab('Verification')">▶ Run Verification Agent</button>
         <span class="ai-active-pill"><span class="status-dot"></span>AI Monitoring Active</span>
+        <div id="backendConnectionBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; cursor:pointer;" onclick="checkBackendHealth(true)" title="Click to test backend connection">
+          <span id="backendStatusDot" style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
+          <span id="backendStatusText">Checking Backend...</span>
+        </div>
         <span class="vignan-branch-pill">VFSTR Main Campus · Vadlamudi</span>
       </div>
       <div class="last-sync-text">
@@ -116,6 +120,27 @@
       <!-- MAIN CONTENT -->
       <main class="main">
         <div id="notificationMsg" style="display:none; padding: 12px 18px; margin-bottom: 16px; border-radius: 8px; font-weight: 600;"></div>
+
+        <!-- Mixed Content Warning for GitHub Pages / HTTPS -->
+        <div id="httpsMixedContentAlert" style="display:none; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 18px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
+          <div style="display:flex; align-items:flex-start; gap:12px;">
+            <div style="font-size:24px; line-height:1;">⚠️</div>
+            <div style="flex:1;">
+              <div style="font-size:15px; font-weight:700; color:#9a3412; margin-bottom:4px;">
+                Browser HTTPS Restriction: Mixed Content Blocked
+              </div>
+              <p style="font-size:13px; color:#7c2d12; margin:0 0 10px 0; line-height:1.5;">
+                You are viewing this portal on <b>GitHub Pages (HTTPS)</b>. Web browsers block HTTPS pages from communicating directly with local HTTP servers (<code>http://localhost:8080</code>).
+              </p>
+              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
+                <a href="http://localhost:8080" target="_blank" style="background:#0f2042; color:#ffffff; font-weight:700; font-size:13px; padding:8px 16px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
+                  👉 Open 100% Connected Local Portal (http://localhost:8080)
+                </a>
+                <span style="font-size:12px; color:#6b7280;">or in Chrome: Click 🔒 Lock icon next to URL &rarr; <b>Site settings</b> &rarr; <b>Insecure content</b> &rarr; <b>Allow</b>, then refresh this page.</span>
+              </div>
+            </div>
+          </div>
+        </div>
 
         <!-- 1. DASHBOARD -->
         <section id="page-Dashboard">
@@ -451,16 +476,50 @@
   </div>
 
   <script>
-    let API_URL = localStorage.getItem('API_URL') || 'http://localhost:8080';
+    var API_URL = (window.location.origin && (window.location.origin.includes(':8080') || window.location.origin.includes('localhost:8080'))) 
+      ? window.location.origin 
+      : (localStorage.getItem('API_URL') || 'http://localhost:8080');
     document.getElementById('apiBaseUrlInput').value = API_URL;
 
     function saveApiUrl() {
       const val = document.getElementById('apiBaseUrlInput').value.trim();
       if (val) {
-        API_URL = val;
-        localStorage.setItem('API_URL', val);
-        showNotice('API URL updated: ' + val);
+        API_URL = val.replace(/\/+$/, '');
+        localStorage.setItem('API_URL', API_URL);
+        showNotice('API URL updated: ' + API_URL);
         refreshAll();
+      }
+    }
+
+    async function checkBackendHealth(showToast = false) {
+      const dot = document.getElementById('backendStatusDot');
+      const text = document.getElementById('backendStatusText');
+      const alertBox = document.getElementById('httpsMixedContentAlert');
+      try {
+        const res = await fetch(API_URL + '/health', { cache: 'no-store' });
+        if (res.ok) {
+          if (dot) {
+            dot.style.background = '#16a34a';
+            dot.parentElement.style.background = '#dcfce7';
+            dot.parentElement.style.color = '#166534';
+          }
+          if (text) text.innerText = 'Backend Connected (' + (API_URL.includes('localhost') ? 'Port 8080' : API_URL) + ')';
+          if (alertBox) alertBox.style.display = 'none';
+          if (showToast) showNotice('Backend is connected and healthy!');
+          return true;
+        }
+      } catch (err) {
+        if (dot) {
+          dot.style.background = '#dc2626';
+          dot.parentElement.style.background = '#fee2e2';
+          dot.parentElement.style.color = '#991b1b';
+        }
+        if (text) text.innerText = 'Backend Offline / Blocked';
+        if (showToast) showNotice('Could not connect to backend at ' + API_URL, true);
+        if (window.location.protocol === 'https:' && alertBox) {
+          alertBox.style.display = 'block';
+        }
+        return false;
       }
     }
 
@@ -495,6 +554,7 @@
     }
 
     async function refreshAll() {
+      await checkBackendHealth();
       await Promise.all([
         loadStudents(),
         loadRequests(),
