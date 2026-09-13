@@ -2363,6 +2363,7 @@ def reports_summary():
 
 
 @app.get("/reports/turnaround")
+@app.get("/reports/turnaround-time")
 def reports_turnaround():
 
     connection = get_connection()
