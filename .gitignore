@@ -37,7 +37,5 @@ cloudflared.exe
 *.exe
 backend/verification_uploads/
 backend/generated_documents/
-backend/bundle_uploads/
 verification_uploads/
 generated_documents/
-bundle_uploads/

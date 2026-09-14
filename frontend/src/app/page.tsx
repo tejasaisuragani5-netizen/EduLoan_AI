@@ -1790,10 +1790,7 @@ export default function Home() {
                         </td>
 
                         <td>
-                          ₹
-                          {student.total_fee.toLocaleString(
-                            "en-IN"
-                          )}
+                          ₹{(Number(student.total_fee) || 0).toLocaleString("en-IN")}
                         </td>
 
                         <td>
@@ -2633,7 +2630,7 @@ export default function Home() {
 
                             <div>
                               <span style={{ color: "#4b5563", fontSize: "12px", display: "block" }}>College Fee:</span>
-                              <strong style={{ color: "#047857" }}>₹ {Number(scannedBarcodeData.student.total_fee).toLocaleString("en-IN")}</strong>
+                              <strong style={{ color: "#047857" }}>₹ {(Number(scannedBarcodeData.student?.total_fee) || 0).toLocaleString("en-IN")}</strong>
                             </div>
                           </div>
 
@@ -2773,7 +2770,7 @@ export default function Home() {
                         <div><strong>Register No:</strong> {aiVerificationResult.barcode_info.student.student_id}</div>
                         <div><strong>Program:</strong> {aiVerificationResult.barcode_info.student.course}</div>
                         <div><strong>Year:</strong> {aiVerificationResult.barcode_info.student.year} (Batch: {aiVerificationResult.barcode_info.student.admission_year})</div>
-                        <div><strong>Fee:</strong> ₹ {Number(aiVerificationResult.barcode_info.student.total_fee).toLocaleString("en-IN")}</div>
+                        <div><strong>Fee:</strong> ₹ {(Number(aiVerificationResult.barcode_info?.student?.total_fee) || 0).toLocaleString("en-IN")}</div>
                       </div>
                     )}
                   </div>
@@ -3149,7 +3146,7 @@ export default function Home() {
                         <div><strong>Register No:</strong> {selectedScorecardModal.barcode_info.student.student_id}</div>
                         <div><strong>Program:</strong> {selectedScorecardModal.barcode_info.student.course}</div>
                         <div><strong>Year:</strong> {selectedScorecardModal.barcode_info.student.year} (Batch: {selectedScorecardModal.barcode_info.student.admission_year})</div>
-                        <div><strong>Fee:</strong> ₹ {Number(selectedScorecardModal.barcode_info.student.total_fee).toLocaleString("en-IN")}</div>
+                        <div><strong>Fee:</strong> ₹ {(Number(selectedScorecardModal.barcode_info?.student?.total_fee) || 0).toLocaleString("en-IN")}</div>
                       </div>
                     )}
                   </div>
@@ -3356,7 +3353,7 @@ export default function Home() {
                         <small>{d.student_id}</small>
                       </td>
                       <td>{d.bank_name}</td>
-                      <td>₹{d.loan_amount.toLocaleString("en-IN")}</td>
+                      <td>₹{(Number(d.loan_amount) || 0).toLocaleString("en-IN")}</td>
                       <td>{d.disbursed_date}</td>
                       <td>
                         <span
