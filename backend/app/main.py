@@ -318,21 +318,27 @@ def create_tables():
     except Exception:
         pass
 
-    # Ensure default real students are seeded if table is empty
+    # Seed default real students once on initial setup if not previously seeded or deleted
     try:
-        cur = connection.execute("SELECT COUNT(*) FROM students")
-        if cur.fetchone()[0] == 0:
-            real_students = [
-                ("261FA04001", "Tejasai", "B.Tech CSE", "1st Year", "2026", 2000000.0, "Approved", "None", 0.0),
-                ("241FA04195", "K. Jagadeesh", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
-                ("241FA04202", "N. Yasaswi", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
-            ]
-            connection.executemany("""
-                INSERT OR IGNORE INTO students (
-                    student_id, name, course, year, admission_year, total_fee,
-                    loan_status, current_hold_status, current_hold_amount
-                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
-            """, real_students)
+        connection.execute("CREATE TABLE IF NOT EXISTS system_metadata (key TEXT PRIMARY KEY, value TEXT)")
+        connection.execute("CREATE TABLE IF NOT EXISTS deleted_students (student_id TEXT PRIMARY KEY, deleted_at TEXT)")
+        
+        is_seeded = connection.execute("SELECT value FROM system_metadata WHERE key = 'initial_seed_done'").fetchone()
+        if not is_seeded:
+            cur = connection.execute("SELECT COUNT(*) FROM students")
+            if cur.fetchone()[0] == 0:
+                real_students = [
+                    ("261FA04001", "Tejasai", "B.Tech CSE", "1st Year", "2026", 2000000.0, "Approved", "None", 0.0),
+                    ("241FA04195", "K. Jagadeesh", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
+                    ("241FA04202", "N. Yasaswi", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
+                ]
+                connection.executemany("""
+                    INSERT OR IGNORE INTO students (
+                        student_id, name, course, year, admission_year, total_fee,
+                        loan_status, current_hold_status, current_hold_amount
+                    ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+                """, real_students)
+            connection.execute("INSERT OR REPLACE INTO system_metadata (key, value) VALUES ('initial_seed_done', '1')")
     except Exception:
         pass
 
@@ -733,42 +739,91 @@ def delete_student(student_id: str):
             detail=f"Student '{clean_sid}' not found"
         )
 
-    # Cascading deletion across all tables for this student
+    # 1. Collect files to delete from disk
+    doc_files = connection.execute(
+        "SELECT file_path FROM documents WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
+    ).fetchall()
+
+    verif_files = connection.execute(
+        "SELECT file_path FROM verification_requests WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
+    ).fetchall()
+
+    bundle_files = connection.execute(
+        "SELECT dossier_pdf_path FROM bundle_eligibility_evaluations WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
+    ).fetchall()
+
+    # 2. Cascading deletion across all tables for this student
     req_count = connection.execute(
-        "DELETE FROM document_requests WHERE student_id = ?", (clean_sid,)
+        "DELETE FROM document_requests WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
     ).rowcount
 
     doc_count = connection.execute(
-        "DELETE FROM documents WHERE student_id = ?", (clean_sid,)
+        "DELETE FROM documents WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
     ).rowcount
 
     verif_count = connection.execute(
-        "DELETE FROM verification_requests WHERE student_id = ?", (clean_sid,)
+        "DELETE FROM verification_requests WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
     ).rowcount
 
     disb_count = connection.execute(
-        "DELETE FROM disbursements WHERE student_id = ?", (clean_sid,)
+        "DELETE FROM disbursements WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
+    ).rowcount
+
+    bundle_count = connection.execute(
+        "DELETE FROM bundle_eligibility_evaluations WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
     ).rowcount
 
     connection.execute(
-        "DELETE FROM students WHERE student_id = ?", (clean_sid,)
+        "DELETE FROM students WHERE UPPER(TRIM(student_id)) = UPPER(?)", (clean_sid,)
+    )
+
+    # 3. Mark in permanent deleted_students table so it never regenerates
+    connection.execute(
+        "CREATE TABLE IF NOT EXISTS deleted_students (student_id TEXT PRIMARY KEY, deleted_at TEXT)"
+    )
+    connection.execute(
+        "INSERT OR REPLACE INTO deleted_students (student_id, deleted_at) VALUES (?, ?)",
+        (clean_sid, datetime.now().isoformat())
     )
 
     connection.commit()
     connection.close()
 
+    # 4. Physically clean up associated files and folders from disk
+    for row in doc_files + verif_files + bundle_files:
+        if row and row[0] and os.path.exists(row[0]):
+            try:
+                os.remove(row[0])
+            except Exception:
+                pass
+
+    for folder in [DOCS_DIR, VERIFICATION_UPLOAD_DIR, BUNDLE_UPLOAD_DIR]:
+        if os.path.exists(folder):
+            for fname in os.listdir(folder):
+                if clean_sid in fname:
+                    fpath = os.path.join(folder, fname)
+                    try:
+                        if os.path.isfile(fpath):
+                            os.remove(fpath)
+                        elif os.path.isdir(fpath):
+                            import shutil
+                            shutil.rmtree(fpath, ignore_errors=True)
+                    except Exception:
+                        pass
+
     return {
         "message": (
-            f"Student {clean_sid} and all associated records deleted successfully: "
+            f"Student {clean_sid} and all associated records deleted permanently from the system: "
             f"{req_count} document requests, {doc_count} issued documents, "
-            f"{verif_count} verification requests, and {disb_count} disbursements removed."
+            f"{verif_count} verification requests, {disb_count} disbursements, and {bundle_count} bundle evaluations removed."
         ),
         "deleted_counts": {
             "students": 1,
             "document_requests": req_count,
             "documents": doc_count,
             "verification_requests": verif_count,
-            "disbursements": disb_count
+            "disbursements": disb_count,
+            "bundle_evaluations": bundle_count
         }
     }
 

@@ -1540,14 +1540,24 @@
     }
 
     async function deleteStudent(sid) {
-      if (!confirm('Are you sure you want to delete student ' + sid + '?')) return;
+      if (!confirm('Are you sure you want to permanently delete student ' + sid + '? All document requests, issued certificates, and records will be permanently purged from the entire system.')) return;
       try {
-        const res = await fetch(API_URL + '/students/' + sid, { method: 'DELETE' });
+        const res = await fetch(API_URL + '/students/' + encodeURIComponent(sid), { method: 'DELETE' });
         if (res.ok) {
-          showNotice('Student deleted.');
-          loadStudents();
+          const data = await res.json();
+          showNotice(data.message || 'Student and all associated records permanently purged.');
+          state.students = (state.students || []).filter(s => s.student_id !== sid);
+          state.requests = (state.requests || []).filter(r => r.student_id !== sid);
+          state.documents = (state.documents || []).filter(d => d.student_id !== sid);
+          state.disbursements = (state.disbursements || []).filter(d => d.student_id !== sid);
+          await refreshAll();
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to delete student', true);
         }
-      } catch (e) {}
+      } catch (e) {
+        showNotice('Failed to connect to server to delete student', true);
+      }
     }
 
     function openLoanStatusModal(sid) {
