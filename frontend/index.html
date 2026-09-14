@@ -3,13 +3,277 @@
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>Vignan's Foundation for Science, Technology & Research - Loan Verification</title>
+  <title>Vignan University · Agent 43 Education Loan Support Portal</title>
   <link rel="stylesheet" href="globals.css">
   <style>
     .hidden { display: none !important; }
     .scorecard-badge.pass { background: #dcfce7; color: #166534; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
     .scorecard-badge.fail { background: #fee2e2; color: #991b1b; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
     .scorecard-badge.warn { background: #fef3c7; color: #92400e; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    
+    /* Strict Guardrail Banner */
+    .guardrail-banner {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .guardrail-icon { font-size: 26px; }
+    .guardrail-text { font-size: 13px; color: #1e3a8a; line-height: 1.45; }
+    .guardrail-tag {
+      display: inline-block;
+      background: #1e3a8a;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Protected Student Badge */
+    .badge-protected {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #dcfce7;
+      color: #15803d;
+      font-weight: 700;
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #86efac;
+    }
+    .badge-standard {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    /* Scheme Card Grid */
+    .schemes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .scheme-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .scheme-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.07);
+    }
+    .scheme-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .scheme-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .scheme-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .scheme-body p {
+      font-size: 13px;
+      color: #475569;
+      margin: 6px 0;
+      line-height: 1.45;
+    }
+    .scheme-kv {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    .scheme-kv strong { color: #0f172a; }
+    
+    /* Direct Verification Card */
+    .bank-verify-box {
+      background: linear-gradient(135deg, #0f2042 0%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 20px rgba(15,32,66,0.25);
+    }
+    .bank-verify-box h3 { margin: 0 0 8px 0; font-size: 20px; font-weight: 700; }
+    .bank-verify-box p { font-size: 13.5px; color: #cbd5e1; margin: 0 0 16px 0; line-height: 1.5; }
+    .bank-verify-input-group {
+      display: flex;
+      gap: 10px;
+      max-width: 600px;
+    }
+    .bank-verify-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #64748b;
+      font-size: 15px;
+      font-family: monospace;
+      text-transform: uppercase;
+      font-weight: 700;
+      background: #1e293b;
+      color: #ffffff;
+    }
+    .bank-verify-btn {
+      padding: 12px 22px;
+      border-radius: 8px;
+      border: none;
+      background: #22c55e;
+      color: #064e3b;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bank-verify-btn:hover { background: #16a34a; color: white; }
+    
+    /* Verified Certificate Display Box */
+    .bank-cert-card {
+      background: #ffffff;
+      border: 2px solid #22c55e;
+      border-radius: 12px;
+      padding: 22px;
+      margin-top: 18px;
+      color: #0f172a;
+      box-shadow: 0 4px 14px rgba(34,197,94,0.15);
+    }
+    .bank-cert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 14px;
+    }
+    .cert-status-badge {
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #86efac;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Chat bot full tab */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 220px);
+      min-height: 480px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .chat-history {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #f8fafc;
+    }
+    .chat-msg {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: #1e3a8a;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.agent {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .chat-quick-prompts {
+      padding: 10px 16px;
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .prompt-chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .prompt-chip:hover { background: #e2e8f0; }
+    .chat-input-bar {
+      padding: 14px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 10px;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .chat-input-bar button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #1e3a8a;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    /* API Float Bar */
     .api-config-bar {
       position: fixed;
       bottom: 12px;
@@ -18,7 +282,7 @@
       color: white;
       padding: 8px 16px;
       border-radius: 30px;
-      font-size: 12.5px;
+      font-size: 12px;
       display: flex;
       align-items: center;
       gap: 10px;
@@ -53,9 +317,9 @@
         <img src="vignan-logo.png" alt="Vignan University Logo" style="height: 60px; max-width: 320px; object-fit: contain; display: block;">
       </div>
       <div class="topbar-center-agent">
-        <div class="agent-radar-badge"><span class="pulse-dot"></span>AI LOAN VERIFICATION RADAR</div>
-        <div class="agent-main-title"><span class="title-dash">—</span> AGENT 43 <span class="title-dash">—</span></div>
-        <div class="agent-sub-title">EDUCATION LOAN SUPPORT AGENT · REAL-TIME MONITOR</div>
+        <div class="agent-radar-badge"><span class="pulse-dot"></span>AGENT 43 · EDUCATION LOAN SUPPORT</div>
+        <div class="agent-main-title"><span class="title-dash">—</span> VFSTR INSTITUTIONAL PORTAL <span class="title-dash">—</span></div>
+        <div class="agent-sub-title">OFFICIAL DOCUMENTATION & ACCOUNTS COORDINATION SYSTEM</div>
       </div>
       <div class="topbar-right-group">
         <div class="accreditation-badges">
@@ -65,10 +329,10 @@
           <div class="accred-seal nba"><span>NBA</span><small>TIER-1</small></div>
         </div>
         <div class="user-profile-chip">
-          <div class="profile-avatar">PS</div>
+          <div class="profile-avatar">VF</div>
           <div class="profile-details">
-            <div class="profile-name">Admin <span class="admin-tag">PORTAL</span></div>
-            <div class="profile-email">vfstr-loan-support</div>
+            <div class="profile-name">Accounts & Admin <span class="admin-tag">PORTAL</span></div>
+            <div class="profile-email">loan-support@vignan.ac.in</div>
           </div>
         </div>
       </div>
@@ -77,8 +341,7 @@
     <!-- SUB-ACTION BAR -->
     <div class="sub-action-bar">
       <div class="sub-actions-left">
-        <button type="button" class="run-agent-btn" onclick="switchTab('Verification')">▶ Run Verification Agent</button>
-        <span class="ai-active-pill"><span class="status-dot"></span>AI Monitoring Active</span>
+        <button type="button" class="run-agent-btn" onclick="switchTab('Info Desk')">🤖 Agent 43 Info Desk</button>
         <div id="backendConnectionBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; cursor:pointer;" onclick="checkBackendHealth(true)" title="Click to test backend connection">
           <span id="backendStatusDot" style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
           <span id="backendStatusText">Checking Backend...</span>
@@ -86,7 +349,7 @@
         <span class="vignan-branch-pill">VFSTR Main Campus · Vadlamudi</span>
       </div>
       <div class="last-sync-text">
-        Active Engine: <strong id="activeEngineLabel">Built-in Verification Engine</strong> · Verified by <strong>Vignan Foundation for Science and Technology</strong>
+        <strong>Strict Guardrail:</strong> Documentation & Scheme Assistance Only · Restrict from recommending commercial lenders.
       </div>
     </div>
 
@@ -102,18 +365,18 @@
           </div>
         </div>
         <div class="human-in-the-loop-card">
-          <strong>HUMAN-IN-THE-LOOP</strong>
-          Institutional verification assistant with official college seal & fraud detection for VFSTR.
+          <strong>WORKFLOW SPECIFICATION</strong>
+          Supports documentation & information for students/parents, accounts section, and banks. 24h target turnaround.
         </div>
         <nav id="sideNav">
-          <button type="button" class="nav-item active" onclick="switchTab('Dashboard')"><span style="font-size:22px">📊</span><span>Dashboard</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Students')"><span style="font-size:22px">👥</span><span>Students</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Document Requests')"><span style="font-size:22px">📑</span><span>Document Requests</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Bank Requirements')"><span style="font-size:22px">🏦</span><span>Bank Requirements</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Documents')"><span style="font-size:22px">📄</span><span>Documents</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Verification')"><span style="font-size:22px">🔍</span><span>Verification</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Disbursement')"><span style="font-size:22px">💰</span><span>Disbursement</span></button>
-          <button type="button" class="nav-item" onclick="switchTab('Reports')"><span style="font-size:22px">📈</span><span>Reports</span></button>
+          <button type="button" class="nav-item active" onclick="switchTab('Dashboard')"><span style="font-size:20px">📊</span><span>Dashboard</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Students')"><span style="font-size:20px">👥</span><span>Students & Loans</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Document Requests')"><span style="font-size:20px">📑</span><span>Document Requests</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Bank Schemes')"><span style="font-size:20px">🏦</span><span>Bank Schemes</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Bank Verification')"><span style="font-size:20px">🔍</span><span>Bank Direct Verify</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Disbursement')"><span style="font-size:20px">💰</span><span>Disbursements</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Reports')"><span style="font-size:20px">📈</span><span>SLA & Default Reports</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Info Desk')"><span style="font-size:20px">🤖</span><span>Agent 43 Info Desk</span></button>
         </nav>
       </aside>
 
@@ -121,24 +384,12 @@
       <main class="main">
         <div id="notificationMsg" style="display:none; padding: 12px 18px; margin-bottom: 16px; border-radius: 8px; font-weight: 600;"></div>
 
-        <!-- Mixed Content Warning for GitHub Pages / HTTPS -->
-        <div id="httpsMixedContentAlert" style="display:none; background:#fff7ed; border:1px solid #fed7aa; border-radius:10px; padding:14px 18px; margin-bottom:18px; box-shadow:0 2px 8px rgba(0,0,0,0.05);">
-          <div style="display:flex; align-items:flex-start; gap:12px;">
-            <div style="font-size:24px; line-height:1;">⚠️</div>
-            <div style="flex:1;">
-              <div style="font-size:15px; font-weight:700; color:#9a3412; margin-bottom:4px;">
-                Browser HTTPS Restriction: Mixed Content Blocked
-              </div>
-              <p style="font-size:13px; color:#7c2d12; margin:0 0 10px 0; line-height:1.5;">
-                You are viewing this portal on <b>GitHub Pages (HTTPS)</b>. Web browsers block HTTPS pages from communicating directly with local HTTP servers (<code>http://localhost:8080</code>).
-              </p>
-              <div style="display:flex; flex-wrap:wrap; gap:10px; align-items:center;">
-                <a href="http://localhost:8080" target="_blank" style="background:#0f2042; color:#ffffff; font-weight:700; font-size:13px; padding:8px 16px; border-radius:6px; text-decoration:none; display:inline-flex; align-items:center; gap:6px;">
-                  👉 Open 100% Connected Local Portal (http://localhost:8080)
-                </a>
-                <span style="font-size:12px; color:#6b7280;">or in Chrome: Click 🔒 Lock icon next to URL &rarr; <b>Site settings</b> &rarr; <b>Insecure content</b> &rarr; <b>Allow</b>, then refresh this page.</span>
-              </div>
-            </div>
+        <!-- Institutional Guardrail Alert Banner -->
+        <div class="guardrail-banner">
+          <div class="guardrail-icon">⚖️</div>
+          <div class="guardrail-text">
+            <span class="guardrail-tag">INSTITUTIONAL MANDATE & GUARDRAIL</span>
+            Agent 43 is designed to issue authentic institutional documentation (Bonafide, Fee Breakdown, Admission Confirmation, Academic Status, Fee Paid) and provide factual government scheme information. It is strictly prohibited from recommending commercial lenders, comparing interest rates, or evaluating personal family repayment capacity.
           </div>
         </div>
 
@@ -149,91 +400,94 @@
               <div>
                 <div class="hero-tags">
                   <span class="hero-tag-system">SYSTEM OPERATIONAL</span>
-                  <span class="hero-tag-live">● LIVE OCR & VERIFY ACTIVE</span>
+                  <span class="hero-tag-live">● 24H SLA ACTIVE</span>
                 </div>
-                <h2 class="hero-heading">Student Loan Support & AI Verification Radar</h2>
-                <p class="hero-desc">Continuous real-time verification and multi-stage fraud detection across bonafide certificates, admission letters, fee estimates, and disbursement reconciliation for Vignan's Foundation for Science, Technology & Research.</p>
+                <h2 class="hero-heading">Education Loan Support & Documentation Engine</h2>
+                <p class="hero-desc">Accelerating education loan applications for Vignan students and parents. Eliminates bank delays through fast automated document issuance, direct online bank verification, and fee ledger reconciliation.</p>
               </div>
               <div class="hero-actions-row">
                 <div class="hero-chips">
-                  <span class="hero-chip">AI Engine: Built-in / Gemini</span>
-                  <span class="hero-chip">College Seal: VFSTR Stamp Valid</span>
-                  <span class="hero-chip">Mode: Hybrid Verification</span>
+                  <span class="hero-chip">5 Standard Documents</span>
+                  <span class="hero-chip">Direct Bank Verification</span>
+                  <span class="hero-chip">Disbursement UTR Ledger</span>
                 </div>
                 <button type="button" class="refresh-metrics-btn" onclick="refreshAll()">🔄 Refresh Metrics</button>
               </div>
             </div>
+            
             <div class="hero-bot-card">
               <div class="bot-card-header">
-                <span class="bot-title">🤖 AI Loan Assistant · Q&A Bot</span>
-                <button type="button" class="ask-robot-badge" onclick="askBotQuick()">Quick Scan ✨</button>
+                <span class="bot-title">🤖 Agent 43 Info Assistant</span>
+                <button type="button" class="ask-robot-badge" onclick="switchTab('Info Desk')">Full Chat ✨</button>
               </div>
               <div class="bot-interactive-area">
-                <div class="bot-avatar-graphic">🤖</div>
-                <div class="bot-speech-bubble" id="botResponse">Hello Admin! Agent 43 is active and monitoring education loan verification pipelines for Vignan's students.</div>
+                <div class="bot-avatar-graphic">🎓</div>
+                <div class="bot-speech-bubble" id="botQuickBubble">Welcome! I assist Vignan students with certified loan certificates, Vidya Lakshmi requirements, and disbursement tracking.</div>
               </div>
               <div class="bot-input-bar">
-                <input type="text" id="botInput" placeholder="Ask Agent 43 about loans, verification, or fees..." onkeydown="if(event.key==='Enter') sendBotQuery()">
-                <button type="button" class="bot-send-btn" onclick="sendBotQuery()">Ask</button>
+                <input type="text" id="botQuickInput" placeholder="Ask about certificates, turnaround, or schemes..." onkeydown="if(event.key==='Enter') sendQuickBotQuery()">
+                <button type="button" class="bot-send-btn" onclick="sendQuickBotQuery()">Ask</button>
               </div>
             </div>
           </div>
 
+          <!-- KPI Radar Cards -->
           <div class="radar-stats-grid">
             <div class="radar-stat-card">
               <div class="stat-header"><span>TOTAL STUDENTS</span><span class="stat-icon-badge blue">👥</span></div>
               <div class="stat-number" id="statTotalStudents">0</div>
-              <div class="stat-footer blue-text">● Active in VFSTR Student DB</div>
+              <div class="stat-footer blue-text">● Enrolled VFSTR Students</div>
             </div>
             <div class="radar-stat-card">
-              <div class="stat-header"><span>ACTIVE LOAN REQUESTS</span><span class="stat-icon-badge amber">📋</span></div>
+              <div class="stat-header"><span>ACTIVE DOCUMENT REQUESTS</span><span class="stat-icon-badge amber">📋</span></div>
               <div class="stat-number" id="statActiveRequests">0</div>
-              <div class="stat-footer amber-text">● Awaiting Document Issue</div>
+              <div class="stat-footer amber-text">● Awaiting Issuance (Target: 24h)</div>
             </div>
             <div class="radar-stat-card">
-              <div class="stat-header"><span>AI SCANS / VERIFICATIONS</span><span class="stat-icon-badge red">🛡️</span></div>
-              <div class="stat-number" id="statTotalVerifications">0</div>
-              <div class="stat-footer red-text">● Document Fraud & Stamp Scans</div>
+              <div class="stat-header"><span>LOAN-DEPENDENT PROTECTED</span><span class="stat-icon-badge green">🛡️</span></div>
+              <div class="stat-number" id="statProtectedStudents">0</div>
+              <div class="stat-footer green-text">● Late Fees & Defaults Suspended</div>
             </div>
             <div class="radar-stat-card">
-              <div class="stat-header"><span>APPROVED & DISBURSED</span><span class="stat-icon-badge green">💰</span></div>
+              <div class="stat-header"><span>TOTAL DISBURSED (₹)</span><span class="stat-icon-badge blue">💰</span></div>
               <div class="stat-number" id="statTotalDisbursed">₹ 0</div>
-              <div class="stat-footer green-text">● <span id="statDisbursedCount">0</span> Disbursed Records</div>
+              <div class="stat-footer blue-text">● Reconciled to Accounts Ledger</div>
             </div>
           </div>
 
-          <div class="section">
+          <!-- Recent Requests -->
+          <div class="section" style="margin-top:20px;">
             <div class="section-header">
-              <h2>Recent Document Requests</h2>
-              <button type="button" class="primary-button" onclick="switchTab('Document Requests')">+ New Document Request</button>
+              <h2>Recent Institutional Document Requests</h2>
+              <button type="button" class="primary-button" onclick="switchTab('Document Requests')">+ New Request</button>
             </div>
             <div id="dashboardRequestsTable">
-              <p class="empty">No document requests yet. Create one from the Document Requests tab.</p>
+              <p class="empty">Loading document requests...</p>
             </div>
           </div>
         </section>
 
-        <!-- 2. STUDENTS -->
+        <!-- 2. STUDENTS & LOAN DEPENDENCY (Workflow 8) -->
         <section id="page-Students" class="hidden">
           <div class="page-title">
-            <h1>Students Directory</h1>
-            <p>Register and manage real VFSTR student records for education loans.</p>
+            <h1>Students & Loan Dependency Management</h1>
+            <p>Track student enrollment, fee ledgers, and loan-dependent status to protect students from unfair default notices.</p>
           </div>
           <div class="student-layout">
             <div class="section form-section">
-              <h2>Add Student</h2>
+              <h2>Register Student</h2>
               <form id="addStudentForm" onsubmit="handleAddStudent(event)">
                 <div class="form-group">
-                  <label>Student Register Number</label>
-                  <input type="text" name="student_id" placeholder="Enter student register number" required>
+                  <label>Register Number</label>
+                  <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
                 </div>
                 <div class="form-group">
-                  <label>Student Name</label>
+                  <label>Student Full Name</label>
                   <input type="text" name="name" placeholder="Enter student name" required>
                 </div>
                 <div class="form-group">
                   <label>Course</label>
-                  <input type="text" name="course" placeholder="Example: B.Tech CSE" required>
+                  <input type="text" name="course" placeholder="e.g. B.Tech Computer Science & Engineering" required>
                 </div>
                 <div class="form-group">
                   <label>Year</label>
@@ -247,165 +501,159 @@
                 </div>
                 <div class="form-group">
                   <label>Admission Year</label>
-                  <input type="text" name="admission_year" placeholder="Example: 2024" required>
+                  <input type="text" name="admission_year" placeholder="e.g. 2024" required>
                 </div>
                 <div class="form-group">
                   <label>Total Course Fee (₹)</label>
-                  <input type="number" name="total_fee" placeholder="Example: 240000" required>
+                  <input type="number" name="total_fee" placeholder="e.g. 240000" required>
                 </div>
                 <button type="submit" class="primary-button">Register Student</button>
               </form>
             </div>
+            
             <div class="section list-section">
-              <h2>Registered Students</h2>
+              <h2>Registered Students & Fee Status</h2>
               <div id="studentsListTable">
-                <p class="empty">No students registered yet. Register your real student details above.</p>
+                <p class="empty">Loading student records...</p>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 3. DOCUMENT REQUESTS -->
+        <!-- 3. DOCUMENT REQUESTS (Workflow 2, 3, 5) -->
         <section id="page-Document Requests" class="hidden">
           <div class="page-title">
-            <h1>Document Requests</h1>
-            <p>Submit and track student requests for bank loan documents.</p>
+            <h1>Institutional Document Requests</h1>
+            <p>Generate certified certificates from live records with authorized digital signature, circular seal, and tamper-proof verification QR.</p>
           </div>
           <div class="section">
-            <h2>Create New Request</h2>
+            <h2>Create Document Request (5 Standard Institutional Documents)</h2>
             <form id="addDocReqForm" onsubmit="handleAddDocRequest(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
               <div class="form-group">
                 <label>Student Register No</label>
-                <input type="text" name="student_id" placeholder="Enter register number" required>
+                <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
               </div>
               <div class="form-group">
-                <label>Document Type</label>
+                <label>Institutional Document Type</label>
                 <select name="document_type" required>
-                  <option value="">Select document type</option>
-                  <option value="Bonafide Certificate">Bonafide Certificate</option>
-                  <option value="Fee Structure Certificate">Fee Structure Certificate</option>
-                  <option value="Admission Confirmation">Admission Confirmation</option>
-                  <option value="Estimate Letter">Estimate Letter</option>
-                  <option value="Expenditure Certificate">Expenditure Certificate</option>
+                  <option value="">-- Select Standard Document --</option>
+                  <option value="Bonafide Certificate">1. Bonafide Certificate</option>
+                  <option value="Fee Structure Letter with Year-wise Breakdown">2. Fee Structure Letter (Year-wise Breakdown)</option>
+                  <option value="Admission Confirmation">3. Admission Confirmation</option>
+                  <option value="Academic Status Certificate">4. Academic Status Certificate</option>
+                  <option value="Fee Paid Statement">5. Fee Paid Statement / Receipts</option>
                 </select>
               </div>
               <div class="form-group">
-                <label>Description / Bank Name</label>
-                <input type="text" name="description" placeholder="e.g. For SBI Education Loan">
+                <label>Purpose / Target Bank</label>
+                <input type="text" name="description" placeholder="e.g. Vidya Lakshmi / SBI Scholar Loan" required>
               </div>
               <div style="display:flex; align-items:flex-end;">
                 <button type="submit" class="primary-button" style="width:100%">Submit Request</button>
               </div>
             </form>
           </div>
+
           <div class="section" style="margin-top:20px;">
-            <h2>Requests Ledger</h2>
+            <h2>Requests Ledger & Turnaround Monitor (Target SLA: 24 Hours)</h2>
             <div id="requestsLedgerTable">
-              <p class="empty">No document requests recorded.</p>
+              <p class="empty">Loading requests...</p>
             </div>
           </div>
         </section>
 
-        <!-- 4. BANK REQUIREMENTS -->
-        <section id="page-Bank Requirements" class="hidden">
+        <!-- 4. BANK SCHEMES & REQUIREMENTS (Workflow 1) -->
+        <section id="page-Bank Schemes" class="hidden">
           <div class="page-title">
-            <h1>Bank Requirements</h1>
-            <p>Documents required for education loan processing across partner banks.</p>
-          </div>
-          <div class="card">
-            <h2>Required Institutional Documents</h2>
-            <div id="bankRequirementsList"></div>
-          </div>
-        </section>
-
-        <!-- 5. DOCUMENTS -->
-        <section id="page-Documents" class="hidden">
-          <div class="page-title">
-            <h1>Issued Documents</h1>
-            <p>Generated loan certificates with official circular seal and security QR code.</p>
-          </div>
-          <div class="section">
-            <h2>Documents Issued</h2>
-            <div id="issuedDocsTable">
-              <p class="empty">No documents issued yet. Generate documents from approved requests.</p>
-            </div>
-          </div>
-        </section>
-
-        <!-- 6. VERIFICATION -->
-        <section id="page-Verification" class="hidden">
-          <div class="page-title">
-            <h1>AI Document Verification Radar</h1>
-            <p>Institutional authenticity screening with official circular seal & tamper analysis.</p>
-          </div>
-          <div class="verification-layout">
-            <!-- Upload Panel -->
-            <div class="section form-section">
-              <h2>Upload Document for Verification</h2>
-              <form id="verifyUploadForm" onsubmit="handleVerifyUpload(event)">
-                <div class="form-group">
-                  <label>Student Register Number</label>
-                  <input type="text" name="student_id" placeholder="Enter student register number" required>
-                </div>
-                <div class="form-group">
-                  <label>Document Type</label>
-                  <select name="document_type" id="verifDocTypeSelect" onchange="handleVerifDocTypeChange()" required>
-                    <option value="">Select document type</option>
-                    <option value="Bonafide Certificate">Bonafide Certificate</option>
-                    <option value="Fee Structure Certificate">Fee Structure Certificate</option>
-                    <option value="Admission Confirmation">Admission Confirmation</option>
-                    <option value="Expenditure Certificate">Expenditure Certificate</option>
-                    <option value="Estimate Letter">Estimate Letter</option>
-                    <option value="Student ID Proof">Student ID Proof (Requires Barcode Back)</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label id="frontFileLabel">Document Photo / Front Side</label>
-                  <input type="file" name="file" accept="image/*" required>
-                </div>
-                <div class="form-group hidden" id="backFileGroup" style="background:#f8fafc; padding:12px; border-radius:8px; border:1.5px dashed #2563eb;">
-                  <label style="color:#1d4ed8; font-weight:700;">📌 Student ID Back Photo with Barcode (Mandatory)</label>
-                  <input type="file" name="back_file" id="backFileInput" accept="image/*">
-                  <small style="color:#64748b;">Uploading the back barcode is mandatory for Student ID verification.</small>
-                </div>
-                <button type="submit" class="primary-button" id="verifySubmitBtn">🔍 Verify Authenticity</button>
-              </form>
-            </div>
-
-            <!-- Scorecard Panel -->
-            <div class="section" id="scorecardPanel">
-              <h2>Authenticity Scorecard</h2>
-              <div id="scorecardResultContainer">
-                <p class="empty">Upload a document photo to verify and generate the official Authenticity Scorecard.</p>
-              </div>
-            </div>
+            <h1>Bank Documentation Requirements & Government Schemes</h1>
+            <p>Authoritative reference guide for public education loan schemes and institutional documentation guidelines.</p>
           </div>
 
-          <!-- History Table -->
+          <!-- Schemes Grid -->
+          <div class="schemes-grid" id="schemesCardsContainer">
+            <p class="empty">Loading public schemes...</p>
+          </div>
+
+          <!-- Document Checklist Table -->
           <div class="section" style="margin-top:24px;">
-            <div class="section-header">
-              <h2>Verification Requests</h2>
-              <button type="button" class="secondary-button" onclick="loadVerificationRequests()">🔄 Refresh</button>
-            </div>
-            <div id="verificationHistoryTable">
-              <p class="empty">No verification scans performed yet.</p>
+            <h2>Institutional Documentation Checklist</h2>
+            <div id="bankRequirementsList">
+              <p class="empty">Loading checklist...</p>
             </div>
           </div>
         </section>
 
-        <!-- 7. DISBURSEMENT -->
+        <!-- 5. BANK DIRECT VERIFICATION (Workflow 4) -->
+        <section id="page-Bank Verification" class="hidden">
+          <div class="page-title">
+            <h1>Bank Direct Verification Portal</h1>
+            <p>Instant online authenticity verification for bank branch loan officers. Eliminates telephone calls and physical visits to campus.</p>
+          </div>
+
+          <!-- Direct Bank Verification Search Box -->
+          <div class="bank-verify-box">
+            <h3>🏦 Bank Branch Direct Authenticity Lookup</h3>
+            <p>Enter the unique institutional verification code printed on the Vignan certificate (e.g. <code>ELN-XXXXXXXX</code>) to authenticate immediately online.</p>
+            <div class="bank-verify-input-group">
+              <input type="text" id="bankVerifyCodeInput" class="bank-verify-input" placeholder="ENTER CODE (e.g. ELN-261FA04001)" onkeydown="if(event.key==='Enter') lookupBankVerification()">
+              <button type="button" class="bank-verify-btn" onclick="lookupBankVerification()">🔍 Verify Authenticity</button>
+            </div>
+          </div>
+
+          <div id="bankVerificationResult"></div>
+
+          <!-- Document History / Issued Documents Table -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Officially Issued Certificates</h2>
+            <div id="issuedDocsTable">
+              <p class="empty">No documents issued yet.</p>
+            </div>
+          </div>
+
+          <!-- Physical Document Scan & OCR Upload -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Scan & OCR Authenticity Verification (Scanned Files)</h2>
+            <p style="font-size:13px; color:#64748b; margin-bottom:14px;">Upload a scanned document photo or student ID card to run the circular seal detector and barcode/QR decoder.</p>
+            <form id="verifyUploadForm" onsubmit="handleVerifyUpload(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+              <div class="form-group">
+                <label>Student Register Number</label>
+                <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
+              </div>
+              <div class="form-group">
+                <label>Document Type</label>
+                <select name="document_type" id="verifDocTypeSelect" required>
+                  <option value="Bonafide Certificate">Bonafide Certificate</option>
+                  <option value="Fee Structure Letter with Year-wise Breakdown">Fee Structure Letter</option>
+                  <option value="Admission Confirmation">Admission Confirmation</option>
+                  <option value="Academic Status Certificate">Academic Status Certificate</option>
+                  <option value="Fee Paid Statement">Fee Paid Statement</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Document Photo / Scan</label>
+                <input type="file" name="file" accept="image/*" required>
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button type="submit" class="primary-button" id="verifySubmitBtn" style="width:100%">🔍 Scan & Verify</button>
+              </div>
+            </form>
+            <div id="scorecardResultContainer" style="margin-top:16px;"></div>
+          </div>
+        </section>
+
+        <!-- 6. DISBURSEMENT & FEE RECONCILIATION (Workflow 7) -->
         <section id="page-Disbursement" class="hidden">
           <div class="page-title">
-            <h1>Disbursement Management</h1>
-            <p>Record and reconcile education loan disbursements from banks.</p>
+            <h1>Disbursement Management & Accounts Reconciliation</h1>
+            <p>Coordinate incoming bank disbursements with accounts section, record bank UTRs, and reconcile against student fee ledgers.</p>
           </div>
           <div class="disbursement-layout">
             <div class="section form-section">
-              <h2>Record Disbursement</h2>
+              <h2>Record Bank Disbursement</h2>
               <form id="addDisbursementForm" onsubmit="handleAddDisbursement(event)">
                 <div class="form-group">
                   <label>Student Register Number</label>
-                  <input type="text" name="student_id" placeholder="Enter student register number" required>
+                  <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
                 </div>
                 <div class="form-group">
                   <label>Bank Name</label>
@@ -416,55 +664,151 @@
                   <input type="number" name="loan_amount" placeholder="e.g. 150000" required>
                 </div>
                 <div class="form-group">
+                  <label>Bank UTR Number</label>
+                  <input type="text" name="utr_number" placeholder="e.g. SBIN20260914001" required>
+                </div>
+                <div class="form-group">
+                  <label>Academic Term</label>
+                  <select name="academic_term" required>
+                    <option value="Full Year">Full Year</option>
+                    <option value="Year 1 / Sem 1">Year 1 / Sem 1</option>
+                    <option value="Year 1 / Sem 2">Year 1 / Sem 2</option>
+                    <option value="Year 2 / Sem 1">Year 2 / Sem 1</option>
+                    <option value="Year 2 / Sem 2">Year 2 / Sem 2</option>
+                    <option value="Year 3 / Sem 1">Year 3 / Sem 1</option>
+                    <option value="Year 4 / Sem 1">Year 4 / Sem 1</option>
+                  </select>
+                </div>
+                <div class="form-group">
                   <label>Disbursed Date</label>
                   <input type="date" name="disbursed_date">
                 </div>
                 <div class="form-group">
-                  <label>Notes</label>
-                  <input type="text" name="notes" placeholder="UTR number or comments">
+                  <label>Accounts Notes</label>
+                  <input type="text" name="notes" placeholder="Direct Institutional Credit">
                 </div>
-                <button type="submit" class="primary-button">Save Disbursement</button>
+                <button type="submit" class="primary-button">Record Bank Disbursement</button>
               </form>
             </div>
+            
             <div class="section list-section">
-              <h2>Disbursements Ledger</h2>
+              <h2>Bank Disbursements & Fee Ledger Reconciliation</h2>
               <div id="disbursementsTable">
-                <p class="empty">No disbursements recorded yet.</p>
+                <p class="empty">Loading disbursements...</p>
               </div>
             </div>
           </div>
         </section>
 
-        <!-- 8. REPORTS -->
+        <!-- 7. REPORTS: SLA & DEFAULT PROTECTION (Workflow 5 & 8) -->
         <section id="page-Reports" class="hidden">
           <div class="page-title">
-            <h1>Institutional Reports & Audit</h1>
-            <p>Verification metrics, turnaround times, and audit summaries.</p>
+            <h1>Turnaround SLA & Fee Default Protection Reports</h1>
+            <p>Monitor document issue turnaround times and protect loan-dependent students from fee default penalties.</p>
           </div>
-          <div class="radar-stats-grid" id="reportsGrid"></div>
-          <div class="section" style="margin-top:20px;">
-            <h2>Average Document Turnaround Times</h2>
-            <div id="turnaroundTable"></div>
+
+          <!-- Turnaround SLA Performance -->
+          <div class="section">
+            <h2>Turnaround Time & SLA Monitor (Target: 24 Hours)</h2>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:14px; font-size:13px; color:#334155;">
+              ⏱️ <strong>Financial Impact Note:</strong> Prompt institutional document issuance prevents bank loan sanction stalls. Every 24-hour delay causes severe distress and risks compounding interest penalties for student families.
+            </div>
+            <div id="turnaroundReportContainer">
+              <p class="empty">Loading turnaround statistics...</p>
+            </div>
+          </div>
+
+          <!-- Fee Reminders & Loan Dependency Default Protection Ledger -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Fee Reminder & Default Protection Ledger (Workflow 8)</h2>
+            <p style="font-size:13px; color:#64748b; margin-bottom:14px;">
+              Accounts Section reminder queue. Students marked as <strong>Loan-Dependent</strong> are actively protected: late fee penalties and default notices are <strong>held in abeyance</strong> pending bank disbursement.
+            </p>
+            <div id="feeRemindersTableContainer">
+              <p class="empty">Loading fee reminders...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. AGENT 43 INFO DESK (Workflow 6) -->
+        <section id="page-Info Desk" class="hidden">
+          <div class="page-title">
+            <h1>Agent 43 Institutional Info Desk</h1>
+            <p>General information on education loan documentation, Vidya Lakshmi processes, and institutional turnaround times.</p>
+          </div>
+
+          <div class="chat-layout">
+            <div class="chat-history" id="chatHistoryBox">
+              <div class="chat-msg agent">
+                <strong>🎓 Agent 43 Education Loan Desk:</strong><br>
+                Hello! I provide students and parents with accurate institutional documentation and factual guidance for education loan applications.<br><br>
+                <em>⚠️ Notice: Under institutional policy, I do not recommend commercial lenders, compare interest rates, or evaluate repayment capacity.</em>
+              </div>
+            </div>
+
+            <!-- 1-Click Quick Prompts -->
+            <div class="chat-quick-prompts">
+              <span class="prompt-chip" onclick="askQuickPrompt('Which bank is best for an education loan?')">🚨 Test Guardrail: Which bank is best?</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('What documents are required for an education loan?')">📄 Required Documents</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('How do I apply on Vidya Lakshmi portal?')">🏛️ Vidya Lakshmi Steps</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('Explain CSIS interest subsidy scheme')">💰 CSIS Subsidy (4.5 LPA)</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('What is the document turnaround time?')">⏱️ 24h Turnaround SLA</span>
+            </div>
+
+            <div class="chat-input-bar">
+              <input type="text" id="chatInput" placeholder="Ask about certificates, turnaround, schemes, or disbursement..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+              <button type="button" onclick="sendChatMessage()">Send</button>
+            </div>
           </div>
         </section>
       </main>
     </div>
   </div>
 
-  <!-- SCORECARD MODAL -->
-  <div id="scorecardModal" class="modal-overlay hidden" onclick="closeScorecardModal()">
-    <div class="modal-card" onclick="event.stopPropagation()">
+  <!-- LOAN STATUS EDIT MODAL (Workflow 8) -->
+  <div id="loanStatusModal" class="modal-overlay hidden" onclick="closeLoanStatusModal()">
+    <div class="modal-card" onclick="event.stopPropagation()" style="max-width:480px;">
       <div class="scorecard-header">
         <div class="scorecard-header-left">
-          <div class="scorecard-crest-icon">🏛️</div>
+          <div class="scorecard-crest-icon">🛡️</div>
           <div>
-            <h3 class="scorecard-title">VIGNAN DOCUMENT VERIFICATION</h3>
-            <div class="scorecard-subtitle" id="modalSubtitle"></div>
+            <h3 class="scorecard-title">UPDATE LOAN DEPENDENCY</h3>
+            <div class="scorecard-subtitle" id="loanModalStudentSubtitle">Student</div>
           </div>
         </div>
-        <button type="button" onclick="closeScorecardModal()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:6px 14px; cursor:pointer; font-weight:700;">✕ Close</button>
+        <button type="button" onclick="closeLoanStatusModal()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:6px 14px; cursor:pointer; font-weight:700;">✕ Close</button>
       </div>
-      <div class="scorecard-body" id="modalScorecardBody"></div>
+      <form id="loanStatusForm" onsubmit="handleSaveLoanStatus(event)" style="padding:20px;">
+        <input type="hidden" id="loanModalStudentId">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:#1e3a8a;">
+            <input type="checkbox" id="loanModalIsDependent" style="width:18px; height:18px;">
+            Student is Loan-Dependent (Bank Disbursement Pending)
+          </label>
+          <small style="color:#64748b; margin-top:4px; display:block;">Checking this suspends late fee default notices until bank disbursement is credited.</small>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Sanctioning Bank</label>
+          <input type="text" id="loanModalBank" placeholder="e.g. State Bank of India">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Sanctioned Amount (₹)</label>
+          <input type="number" id="loanModalSanctioned" placeholder="e.g. 200000">
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Loan Processing Status</label>
+          <select id="loanModalStatus">
+            <option value="Sanctioned - Disbursement Pending">Sanctioned - Disbursement Pending</option>
+            <option value="Application in Bank Processing">Application in Bank Processing</option>
+            <option value="Disbursed & Reconciled">Disbursed & Reconciled</option>
+            <option value="Not Applicable">Not Applicable</option>
+          </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="secondary-button" onclick="closeLoanStatusModal()">Cancel</button>
+          <button type="submit" class="primary-button">Save Loan Status</button>
+        </div>
+      </form>
     </div>
   </div>
 
@@ -507,34 +851,18 @@
     async function checkBackendHealth(showToast = false) {
       const dot = document.getElementById('backendStatusDot');
       const text = document.getElementById('backendStatusText');
-      const alertBox = document.getElementById('httpsMixedContentAlert');
       try {
         const res = await fetch(API_URL + '/health', { cache: 'no-store' });
         if (res.ok) {
-          if (dot) {
-            dot.style.background = '#16a34a';
-            dot.parentElement.style.background = '#dcfce7';
-            dot.parentElement.style.color = '#166534';
-          }
-          const label = API_URL.includes('trycloudflare.com') 
-            ? 'Cloudflare HTTPS' 
-            : (API_URL.includes('localhost') ? 'Port 8080' : API_URL);
-          if (text) text.innerText = 'Backend Connected (' + label + ')';
-          if (alertBox) alertBox.style.display = 'none';
+          if (dot) dot.style.background = '#16a34a';
+          if (text) text.innerText = 'Connected: ' + (API_URL.includes('trycloudflare') ? 'Cloudflare' : 'Port 8080');
           if (showToast) showNotice('Backend is connected and healthy!');
           return true;
         }
       } catch (err) {
-        if (dot) {
-          dot.style.background = '#dc2626';
-          dot.parentElement.style.background = '#fee2e2';
-          dot.parentElement.style.color = '#991b1b';
-        }
+        if (dot) dot.style.background = '#dc2626';
         if (text) text.innerText = 'Backend Offline';
         if (showToast) showNotice('Could not connect to backend at ' + API_URL, true);
-        if (window.location.protocol === 'https:' && alertBox && !API_URL.startsWith('https://')) {
-          alertBox.style.display = 'block';
-        }
         return false;
       }
     }
@@ -544,9 +872,11 @@
       requests: [],
       documents: [],
       disbursements: [],
-      verifications: [],
+      schemes: [],
       bankRequirements: [],
-      aiStatus: null
+      feeReminders: [],
+      turnaround: null,
+      summary: null
     };
 
     function switchTab(page) {
@@ -566,7 +896,7 @@
       el.style.background = isError ? '#fee2e2' : '#dcfce7';
       el.style.color = isError ? '#991b1b' : '#166534';
       el.innerText = msg;
-      setTimeout(() => { el.style.display = 'none'; }, 4000);
+      setTimeout(() => { el.style.display = 'none'; }, 4500);
     }
 
     async function refreshAll() {
@@ -574,22 +904,23 @@
       await Promise.all([
         loadStudents(),
         loadRequests(),
-        loadBankRequirements(),
         loadDocuments(),
-        loadVerificationRequests(),
+        loadSchemes(),
+        loadBankRequirements(),
         loadDisbursements(),
         loadReports(),
-        loadAiStatus()
+        loadFeeReminders()
       ]);
     }
 
+    // 1. STUDENTS
     async function loadStudents() {
       try {
         const res = await fetch(API_URL + '/students');
         if (res.ok) {
           state.students = await res.json();
           renderStudents();
-          updateStats();
+          updateKPIs();
         }
       } catch (e) {}
     }
@@ -597,18 +928,31 @@
     function renderStudents() {
       const container = document.getElementById('studentsListTable');
       if (!state.students || state.students.length === 0) {
-        container.innerHTML = '<p class="empty">No students registered yet. Register your real student details above.</p>';
+        container.innerHTML = '<p class="empty">No students registered yet.</p>';
         return;
       }
-      let html = '<table class="table"><thead><tr><th>Reg No</th><th>Name</th><th>Course</th><th>Year</th><th>Fee</th><th>Actions</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>Reg No</th><th>Name</th><th>Course & Year</th><th>Total Fee</th><th>Paid Fee</th><th>Balance</th><th>Loan Dependency Status</th><th>Actions</th></tr></thead><tbody>';
       state.students.forEach(s => {
+        const total = Number(s.total_fee || 0);
+        const paid = Number(s.paid_fee || 0);
+        const bal = Math.max(0, total - paid);
+        const isDep = Boolean(s.is_loan_dependent);
+        const badge = isDep 
+          ? `<span class="badge-protected">🛡️ Protected (${s.loan_bank || 'Bank'})</span>`
+          : `<span class="badge-standard">Standard</span>`;
+        
         html += `<tr>
           <td><strong>${s.student_id}</strong></td>
           <td>${s.name}</td>
-          <td>${s.course}</td>
-          <td>${s.year}</td>
-          <td>₹ ${Number(s.total_fee).toLocaleString('en-IN')}</td>
-          <td><button class="reject-button" style="font-size:12px; padding:4px 8px;" onclick="deleteStudent('${s.student_id}')">Delete</button></td>
+          <td>${s.course} (${s.year})</td>
+          <td>₹ ${total.toLocaleString('en-IN')}</td>
+          <td>₹ ${paid.toLocaleString('en-IN')}</td>
+          <td><strong style="color:${bal > 0 ? '#b91c1c' : '#15803d'};">₹ ${bal.toLocaleString('en-IN')}</strong></td>
+          <td>${badge}</td>
+          <td>
+            <button class="secondary-button" style="font-size:11.5px; padding:4px 8px; margin-right:4px;" onclick="openLoanStatusModal('${s.student_id}')">⚙️ Loan Status</button>
+            <button class="reject-button" style="font-size:11.5px; padding:4px 8px;" onclick="deleteStudent('${s.student_id}')">Delete</button>
+          </td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -633,15 +977,15 @@
           body: JSON.stringify(data)
         });
         if (res.ok) {
-          showNotice('Student ' + data.student_id + ' registered successfully!');
+          showNotice('Student registered successfully!');
           form.reset();
           loadStudents();
         } else {
           const err = await res.json();
-          showNotice(err.detail || 'Failed to add student', true);
+          showNotice(err.detail || 'Failed to register student', true);
         }
       } catch (err) {
-        showNotice('Could not connect to backend', true);
+        showNotice('Connection error', true);
       }
     }
 
@@ -650,19 +994,67 @@
       try {
         const res = await fetch(API_URL + '/students/' + sid, { method: 'DELETE' });
         if (res.ok) {
-          showNotice('Student ' + sid + ' deleted.');
+          showNotice('Student deleted.');
           loadStudents();
         }
       } catch (e) {}
     }
 
+    function openLoanStatusModal(sid) {
+      const student = state.students.find(s => s.student_id === sid);
+      if (!student) return;
+      document.getElementById('loanModalStudentId').value = sid;
+      document.getElementById('loanModalStudentSubtitle').innerText = `${student.name} (${student.student_id}) · ${student.course}`;
+      document.getElementById('loanModalIsDependent').checked = Boolean(student.is_loan_dependent);
+      document.getElementById('loanModalBank').value = student.loan_bank || '';
+      document.getElementById('loanModalSanctioned').value = student.sanctioned_amount || '';
+      document.getElementById('loanModalStatus').value = student.loan_status || 'Sanctioned - Disbursement Pending';
+      document.getElementById('loanStatusModal').classList.remove('hidden');
+    }
+
+    function closeLoanStatusModal() {
+      document.getElementById('loanStatusModal').classList.add('hidden');
+    }
+
+    async function handleSaveLoanStatus(e) {
+      e.preventDefault();
+      const sid = document.getElementById('loanModalStudentId').value;
+      const isDep = document.getElementById('loanModalIsDependent').checked;
+      const bank = document.getElementById('loanModalBank').value.trim();
+      const sanctioned = parseFloat(document.getElementById('loanModalSanctioned').value || 0);
+      const status = document.getElementById('loanModalStatus').value;
+
+      try {
+        const res = await fetch(API_URL + '/students/' + sid + '/loan-status', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            is_loan_dependent: isDep,
+            loan_bank: bank,
+            sanctioned_amount: sanctioned,
+            loan_status: status
+          })
+        });
+        if (res.ok) {
+          showNotice(`Loan status updated for student ${sid}`);
+          closeLoanStatusModal();
+          await Promise.all([loadStudents(), loadFeeReminders(), updateKPIs()]);
+        } else {
+          showNotice('Failed to update loan status', true);
+        }
+      } catch (err) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    // 2. DOCUMENT REQUESTS
     async function loadRequests() {
       try {
         const res = await fetch(API_URL + '/document-requests');
         if (res.ok) {
           state.requests = await res.json();
           renderRequests();
-          updateStats();
+          updateKPIs();
         }
       } catch (e) {}
     }
@@ -671,20 +1063,31 @@
       const container = document.getElementById('requestsLedgerTable');
       const dashContainer = document.getElementById('dashboardRequestsTable');
       if (!state.requests || state.requests.length === 0) {
-        const emptyMsg = '<p class="empty">No document requests yet.</p>';
+        const emptyMsg = '<p class="empty">No document requests recorded yet.</p>';
         container.innerHTML = emptyMsg;
         if (dashContainer) dashContainer.innerHTML = emptyMsg;
         return;
       }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document</th><th>Date</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document Type</th><th>Bank / Purpose</th><th>Date</th><th>Turnaround SLA</th><th>Status</th><th>Action</th></tr></thead><tbody>';
       state.requests.forEach(r => {
+        const isPending = r.status === 'Pending';
+        const slaStatus = isPending
+          ? '<span style="color:#d97706; font-weight:700;">⏱️ In Progress (Target: 24h)</span>'
+          : '<span style="color:#15803d; font-weight:700;">✓ Issued within SLA</span>';
+        
+        const actionBtn = isPending
+          ? `<button class="approve-button" style="font-size:12px; padding:6px 12px;" onclick="generateDoc(${r.id})">⚡ Issue & Sign Doc</button>`
+          : `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Officially Issued</span>`;
+
         html += `<tr>
           <td>#${r.id}</td>
           <td><strong>${r.student_id}</strong></td>
           <td>${r.document_type}</td>
+          <td>${r.description || 'Education Loan'}</td>
           <td>${r.request_date || ''}</td>
+          <td>${slaStatus}</td>
           <td><span class="status ${r.status.toLowerCase()}">${r.status}</span></td>
-          <td>${r.status === 'Pending' ? `<button class="approve-button" style="font-size:12px; padding:4px 8px;" onclick="generateDoc(${r.id})">Issue Doc</button>` : 'Issued'}</td>
+          <td>${actionBtn}</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -707,13 +1110,9 @@
           body: JSON.stringify(data)
         });
         if (res.ok) {
-          showNotice('Document request submitted and forwarded to Verification pipeline!');
+          showNotice('Official document request submitted! SLA tracking initiated.');
           form.reset();
-          await Promise.all([
-            loadRequests(),
-            loadVerificationRequests(),
-            updateStats()
-          ]);
+          await Promise.all([loadRequests(), updateKPIs()]);
         } else {
           const err = await res.json();
           showNotice(err.detail || 'Failed to submit request', true);
@@ -731,13 +1130,9 @@
           body: JSON.stringify({ request_id: reqId })
         });
         if (res.ok) {
-          showNotice('Document officially issued with circular seal & verified!');
-          await Promise.all([
-            loadRequests(),
-            loadDocuments(),
-            loadVerificationRequests(),
-            updateStats()
-          ]);
+          const resData = await res.json();
+          showNotice(`Document issued successfully! Verification code: ${resData.verification_code}`);
+          await Promise.all([loadRequests(), loadDocuments(), loadReports(), updateKPIs()]);
         } else {
           const err = await res.json();
           showNotice(err.detail || 'Failed to generate document', true);
@@ -747,6 +1142,7 @@
       }
     }
 
+    // 3. ISSUED DOCUMENTS
     async function loadDocuments() {
       try {
         const res = await fetch(API_URL + '/documents');
@@ -763,34 +1159,130 @@
         container.innerHTML = '<p class="empty">No documents issued yet.</p>';
         return;
       }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document</th><th>Code</th><th>Issued Date</th><th>PDF</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document Type</th><th>Verification Code</th><th>Issued Date</th><th>Direct Download</th></tr></thead><tbody>';
       state.documents.forEach(d => {
         html += `<tr>
           <td>#${d.id}</td>
-          <td><strong>${d.student_id}</strong></td>
+          <td><strong>${d.student_id}</strong> (${d.student_name || 'Student'})</td>
           <td>${d.document_type}</td>
-          <td><code>${d.verification_code}</code></td>
+          <td><code style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-weight:700; color:#1e3a8a;">${d.verification_code}</code></td>
           <td>${d.issued_date}</td>
-          <td><a href="${API_URL}/documents/download/${d.id}" target="_blank" class="secondary-button" style="font-size:12px; text-decoration:none; padding:4px 8px;">Download PDF</a></td>
+          <td><a href="${API_URL}/documents/${d.id}/download" target="_blank" class="secondary-button" style="font-size:12px; text-decoration:none; padding:4px 10px;">📄 Download PDF</a></td>
         </tr>`;
       });
       html += '</tbody></table>';
       container.innerHTML = html;
     }
 
-    function handleVerifDocTypeChange() {
-      const val = document.getElementById('verifDocTypeSelect').value;
-      const backGroup = document.getElementById('backFileGroup');
-      const backInput = document.getElementById('backFileInput');
-      const frontLabel = document.getElementById('frontFileLabel');
-      if (val === 'Student ID Proof') {
-        backGroup.classList.remove('hidden');
-        backInput.setAttribute('required', 'true');
-        frontLabel.innerText = 'Student ID Front Photo';
-      } else {
-        backGroup.classList.add('hidden');
-        backInput.removeAttribute('required');
-        frontLabel.innerText = 'Document Photo';
+    // 4. BANK SCHEMES (Workflow 1)
+    async function loadSchemes() {
+      try {
+        const res = await fetch(API_URL + '/schemes');
+        if (res.ok) {
+          state.schemes = await res.json();
+          renderSchemes();
+        }
+      } catch (e) {}
+    }
+
+    function renderSchemes() {
+      const container = document.getElementById('schemesCardsContainer');
+      if (!state.schemes || state.schemes.length === 0) {
+        container.innerHTML = '<p class="empty">No schemes loaded.</p>';
+        return;
+      }
+      let html = '';
+      state.schemes.forEach(s => {
+        html += `<div class="scheme-card">
+          <div class="scheme-header">
+            <span class="scheme-title">${s.name}</span>
+            <span class="scheme-tag">${s.target_beneficiary}</span>
+          </div>
+          <div class="scheme-body">
+            <p>${s.key_features}</p>
+            <div class="scheme-kv"><span>Eligibility:</span> <strong>${s.eligibility}</strong></div>
+            <div class="scheme-kv"><span>Collateral-Free Ceiling:</span> <strong>${s.non_collateral_ceiling}</strong></div>
+            <div class="scheme-kv"><span>Interest Subsidy:</span> <strong>${s.interest_subsidy}</strong></div>
+            <div class="scheme-kv"><span>Required VFSTR Docs:</span> <strong>${s.required_institutional_docs.join(', ')}</strong></div>
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+              <small style="color:#64748b;">Processing: <strong>${s.turnaround_sla}</strong></small>
+              <a href="${s.portal_url}" target="_blank" style="font-size:12px; font-weight:700; color:#2563eb; text-decoration:none;">Official Portal &rarr;</a>
+            </div>
+          </div>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    async function loadBankRequirements() {
+      try {
+        const res = await fetch(API_URL + '/bank-requirements');
+        if (res.ok) {
+          state.bankRequirements = await res.json();
+          const el = document.getElementById('bankRequirementsList');
+          let html = '<table class="table"><thead><tr><th>Document Name</th><th>Requirement Status</th><th>Bank Purpose / Notes</th></tr></thead><tbody>';
+          state.bankRequirements.forEach(item => {
+            html += `<tr>
+              <td><strong>${item.document_type}</strong></td>
+              <td>${item.required ? '<span style="color:#16a34a; font-weight:700;">Mandatory</span>' : '<span style="color:#64748b;">Supporting / Optional</span>'}</td>
+              <td>${item.notes}</td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+          el.innerHTML = html;
+        }
+      } catch (e) {}
+    }
+
+    // 5. BANK DIRECT VERIFICATION (Workflow 4)
+    async function lookupBankVerification() {
+      const code = document.getElementById('bankVerifyCodeInput').value.trim();
+      const container = document.getElementById('bankVerificationResult');
+      if (!code) {
+        showNotice('Please enter a verification code', true);
+        return;
+      }
+      container.innerHTML = '<p style="color:#1e3a8a; font-weight:600;">Authenticating with institutional registry...</p>';
+      try {
+        const res = await fetch(API_URL + '/verify/' + encodeURIComponent(code));
+        if (res.ok) {
+          const cert = await res.json();
+          container.innerHTML = `
+            <div class="bank-cert-card">
+              <div class="bank-cert-header">
+                <div>
+                  <h3 style="margin:0; font-size:18px; color:#0f2042;">INSTITUTIONAL AUTHENTICITY CERTIFICATE</h3>
+                  <small style="color:#64748b;">Vignan's Foundation for Science, Technology and Research (VFSTR)</small>
+                </div>
+                <span class="cert-status-badge">✓ ${cert.authenticity_status}</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:13.5px; margin-bottom:16px;">
+                <div><span style="color:#64748b;">Student Name:</span><br><strong>${cert.student_name}</strong></div>
+                <div><span style="color:#64748b;">Register Number:</span><br><strong>${cert.student_id}</strong></div>
+                <div><span style="color:#64748b;">Course:</span><br><strong>${cert.course}</strong></div>
+                <div><span style="color:#64748b;">Document Type:</span><br><strong>${cert.document_type}</strong></div>
+                <div><span style="color:#64748b;">Verification Code:</span><br><code>${cert.verification_code}</code></div>
+                <div><span style="color:#64748b;">Issued Date:</span><br><strong>${cert.issued_date}</strong></div>
+              </div>
+              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:12px 14px; margin-bottom:14px; font-size:13px; color:#166534;">
+                🏛️ <strong>Bank Notice:</strong> ${cert.bank_notice}
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; color:#64748b;">Authorized Signatory: <strong>${cert.authorized_signatory}</strong></span>
+                <a href="${API_URL}${cert.download_url}" target="_blank" class="primary-button" style="text-decoration:none; padding:6px 14px; font-size:13px;">📄 Download Verified PDF</a>
+              </div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:16px; margin-top:16px; color:#991b1b;">
+              <strong style="font-size:15px;">✗ Verification Code Not Found or Unrecognized</strong>
+              <p style="margin:6px 0 0 0; font-size:13px;">Code <code>${code}</code> does not match any officially issued Vignan institutional certificate. Please check the code or contact the administration.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        showNotice('Connection error during verification lookup', true);
       }
     }
 
@@ -801,12 +1293,11 @@
       formData.append('student_id', form.student_id.value.trim());
       formData.append('document_type', form.document_type.value);
       formData.append('file', form.file.files[0]);
-      if (form.back_file && form.back_file.files[0]) {
-        formData.append('back_file', form.back_file.files[0]);
-      }
+      
       const btn = document.getElementById('verifySubmitBtn');
-      btn.innerText = 'Verifying with AI...';
+      btn.innerText = 'Scanning & Verifying...';
       btn.disabled = true;
+
       try {
         const res = await fetch(API_URL + '/verification/upload', {
           method: 'POST',
@@ -814,182 +1305,37 @@
         });
         const data = await res.json();
         if (res.ok) {
-          renderScorecard(data);
-          loadVerificationRequests();
-          showNotice('Verification scan completed!');
+          const isPass = data.ai_verdict === 'VERIFIED' || data.ai_verdict === 'REAL';
+          document.getElementById('scorecardResultContainer').innerHTML = `
+            <div style="background:${isPass ? '#f0fdf4' : '#fef2f2'}; border:1.5px solid ${isPass ? '#86efac' : '#fecaca'}; border-radius:10px; padding:16px; margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong style="font-size:16px; color:${isPass ? '#166534' : '#991b1b'};">${isPass ? '✓ DOCUMENT AUTHENTIC' : '✗ VERIFICATION FAILED'}</strong>
+                <span class="scorecard-badge ${isPass ? 'pass' : 'fail'}">${data.ai_verdict}</span>
+              </div>
+              <p style="font-size:13px; color:#334155; margin:0 0 10px 0;">${data.reason || 'Authenticity analysis complete.'}</p>
+              <div style="font-size:12px; color:#64748b;">Confidence: <strong>${Math.round(data.confidence || 0)}%</strong> · Engine: Built-in Verification Engine</div>
+            </div>
+          `;
+          showNotice('Scan complete!');
         } else {
-          showNotice(data.detail || 'Verification failed', true);
+          showNotice(data.detail || 'Scan failed', true);
         }
       } catch (err) {
-        showNotice('Failed to connect to verification engine', true);
+        showNotice('Connection error', true);
       } finally {
-        btn.innerText = '🔍 Verify Authenticity';
+        btn.innerText = '🔍 Scan & Verify';
         btn.disabled = false;
       }
     }
 
-    function renderScorecard(result) {
-      const container = document.getElementById('scorecardResultContainer');
-      const isPass = result.ai_verdict === 'VERIFIED' || result.ai_verdict === 'REAL';
-      let barcodeWidget = '';
-      if (result.barcode_info && result.barcode_info.detected) {
-        barcodeWidget = `<div style="margin-bottom:16px; background:${result.barcode_info.matched ? '#f0fdf4' : '#fef2f2'}; border:1.5px solid ${result.barcode_info.matched ? '#86efac' : '#fecaca'}; border-radius:10px; padding:12px 14px;">
-          <div style="display:flex; justify-content:space-between; align-items:center;">
-            <strong style="color:${result.barcode_info.matched ? '#15803d' : '#991b1b'};">📊 Barcode: <code>${result.barcode_info.code}</code></strong>
-            <span style="font-size:12px; font-weight:700; background:${result.barcode_info.matched ? '#dcfce7' : '#fee2e2'}; color:${result.barcode_info.matched ? '#166534' : '#b91c1c'}; padding:2px 8px; border-radius:4px;">
-              ${result.barcode_info.matched ? '✓ OFFICIAL BARCODE MATCHED' : '✗ BARCODE MISMATCH'}
-            </span>
-          </div>
-        </div>`;
-      }
-      let rows = '';
-      (result.scorecard || []).forEach(item => {
-        rows += `<tr class="scorecard-row">
-          <td class="scorecard-cell-label">${item.label}</td>
-          <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
-        </tr>`;
-      });
-      container.innerHTML = `<div class="scorecard-container ${isPass ? 'verified' : 'rejected'}">
-        <div class="scorecard-header">
-          <div class="scorecard-header-left">
-            <div class="scorecard-crest-icon">🏛️</div>
-            <div>
-              <h3 class="scorecard-title">VIGNAN DOCUMENT VERIFICATION</h3>
-              <div class="scorecard-subtitle">Vignan's Foundation for Science, Technology & Research (VFSTR)</div>
-            </div>
-          </div>
-        </div>
-        <div class="scorecard-body">
-          ${barcodeWidget}
-          <table class="scorecard-table"><tbody>${rows}</tbody></table>
-          <div class="scorecard-decision-banner ${isPass ? 'verified' : 'rejected'}">
-            <div class="scorecard-final-verdict">
-              <span class="final-tag">FINAL VERIFICATION RESULT</span>
-              <span class="final-status-text">FINAL: ${result.ai_verdict}</span>
-              ${result.reason ? `<div class="scorecard-reason-text"><strong>REASON:</strong> ${result.reason}</div>` : ''}
-            </div>
-            <div class="scorecard-metrics">
-              <span class="confidence-chip">CONFIDENCE: ${Math.round(result.confidence || 0)}%</span>
-              <span class="status ${result.status.toLowerCase()}">${result.status}</span>
-            </div>
-          </div>
-        </div>
-      </div>`;
-    }
-
-    async function loadVerificationRequests() {
-      try {
-        const res = await fetch(API_URL + '/verification/requests');
-        if (res.ok) {
-          state.verifications = await res.json();
-          renderVerificationHistory();
-          updateStats();
-        }
-      } catch (e) {}
-    }
-
-    function renderVerificationHistory() {
-      const container = document.getElementById('verificationHistoryTable');
-      if (!state.verifications || state.verifications.length === 0) {
-        container.innerHTML = '<p class="empty">No verification scans performed yet.</p>';
-        return;
-      }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Doc Type</th><th>Verdict</th><th>Confidence</th><th>Status</th><th>Scorecard</th><th>Action</th></tr></thead><tbody>';
-      state.verifications.forEach(v => {
-        const isPending = (v.status || '').toLowerCase() === 'pending';
-        const isApproved = (v.status || '').toLowerCase() === 'approved';
-        const actionHtml = isPending
-          ? `<button class="approve-button" style="font-size:12px; padding:4px 8px;" onclick="generateDoc(${v.request_id || v.id})" title="Issue and verify official document">⚡ Issue Doc</button>`
-          : isApproved
-            ? `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Verified</span>`
-            : `<span style="color:#991b1b; font-weight:700; font-size:12px;">✗ ${v.status}</span>`;
-        html += `<tr>
-          <td>#${v.id}</td>
-          <td><strong>${v.student_id}</strong></td>
-          <td>${v.document_type}</td>
-          <td><strong>${v.ai_verdict}</strong></td>
-          <td>${v.confidence && v.confidence > 0 ? Math.round(v.confidence) + '%' : '—'}</td>
-          <td><span class="status ${v.status.toLowerCase()}">${v.status}</span></td>
-          <td><button class="secondary-button" style="font-size:12px; padding:4px 8px;" onclick="openScorecardModal(${v.id})">📊 View</button></td>
-          <td>${actionHtml}</td>
-        </tr>`;
-      });
-      html += '</tbody></table>';
-      container.innerHTML = html;
-    }
-
-    function openScorecardModal(id) {
-      const record = state.verifications.find(v => v.id === id);
-      if (!record) return;
-      document.getElementById('modalSubtitle').innerText = `Record #${record.id} — ${record.student_name || 'Student'} (${record.student_id})`;
-      const isPass = record.ai_verdict === 'VERIFIED' || record.ai_verdict === 'REAL';
-      const isPending = (record.status || '').toLowerCase() === 'pending';
-      let rows = '';
-      if (record.scorecard && record.scorecard.length > 0) {
-        record.scorecard.forEach(item => {
-          rows += `<tr class="scorecard-row">
-            <td class="scorecard-cell-label">${item.label}</td>
-            <td class="scorecard-cell-value"><span class="scorecard-badge ${item.status}">${item.value}</span></td>
-          </tr>`;
-        });
-      } else {
-        rows = `
-          <tr class="scorecard-row"><td class="scorecard-cell-label">Request Type</td><td class="scorecard-cell-value">Official Document Issuance</td></tr>
-          <tr class="scorecard-row"><td class="scorecard-cell-label">Student Name</td><td class="scorecard-cell-value"><strong>${record.student_name || 'Student'}</strong></td></tr>
-          <tr class="scorecard-row"><td class="scorecard-cell-label">Register Number</td><td class="scorecard-cell-value"><strong>${record.student_id}</strong></td></tr>
-          <tr class="scorecard-row"><td class="scorecard-cell-label">Document Requested</td><td class="scorecard-cell-value">${record.document_type}</td></tr>
-          <tr class="scorecard-row"><td class="scorecard-cell-label">Status Details</td><td class="scorecard-cell-value">${record.ai_reason || 'Pending verification and issuance'}</td></tr>
-        `;
-      }
-      const pendingActionBtn = isPending
-        ? `<div style="margin-top:14px; display:flex; justify-content:flex-end; gap:8px;">
-             <button class="approve-button" style="padding:8px 16px; font-weight:700;" onclick="closeScorecardModal(); generateDoc(${record.request_id || record.id});">⚡ Issue Official Document & Verify</button>
-           </div>`
-        : '';
-      document.getElementById('modalScorecardBody').innerHTML = `
-        <table class="scorecard-table"><tbody>${rows}</tbody></table>
-        <div class="scorecard-decision-banner ${isPass ? 'verified' : isPending ? 'review' : 'rejected'}" style="margin-top:14px;">
-          <div class="scorecard-final-verdict">
-            <span class="final-tag">FINAL VERIFICATION RESULT</span>
-            <span class="final-status-text">FINAL: ${record.ai_verdict}</span>
-            <div class="scorecard-reason-text"><strong>REASON:</strong> ${record.ai_reason || record.reason || 'Verification complete'}</div>
-          </div>
-          <div class="scorecard-metrics">
-            <span class="confidence-chip">${record.confidence && record.confidence > 0 ? 'CONFIDENCE: ' + Math.round(record.confidence) + '%' : 'DIRECT REQUEST'}</span>
-            <span class="status ${record.status.toLowerCase()}">${record.status}</span>
-          </div>
-        </div>
-        ${pendingActionBtn}
-      `;
-      document.getElementById('scorecardModal').classList.remove('hidden');
-    }
-
-    function closeScorecardModal() {
-      document.getElementById('scorecardModal').classList.add('hidden');
-    }
-
-    async function loadBankRequirements() {
-      try {
-        const res = await fetch(API_URL + '/bank-requirements');
-        if (res.ok) {
-          state.bankRequirements = await res.json();
-          const el = document.getElementById('bankRequirementsList');
-          let html = '';
-          state.bankRequirements.forEach(item => {
-            html += `<div class="request-row"><span>${item.document_type}</span><strong>${item.required ? 'Required' : 'Optional'}</strong></div>`;
-          });
-          el.innerHTML = html;
-        }
-      } catch (e) {}
-    }
-
+    // 6. DISBURSEMENTS & RECONCILIATION (Workflow 7)
     async function loadDisbursements() {
       try {
         const res = await fetch(API_URL + '/disbursements');
         if (res.ok) {
           state.disbursements = await res.json();
           renderDisbursements();
-          updateStats();
+          updateKPIs();
         }
       } catch (e) {}
     }
@@ -1000,15 +1346,22 @@
         container.innerHTML = '<p class="empty">No disbursements recorded yet.</p>';
         return;
       }
-      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Bank</th><th>Amount</th><th>Date</th><th>Notes</th></tr></thead><tbody>';
+      let html = '<table class="table"><thead><tr><th>UTR Number</th><th>Student</th><th>Bank</th><th>Amount</th><th>Academic Term</th><th>Date</th><th>Reconciliation Status</th><th>Action</th></tr></thead><tbody>';
       state.disbursements.forEach(d => {
+        const isRec = Boolean(d.reconciled);
+        const actionHtml = isRec
+          ? `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Reconciled</span>`
+          : `<button class="approve-button" style="font-size:12px; padding:4px 10px;" onclick="reconcileDisbursement(${d.id})">⚡ Reconcile Fee Ledger</button>`;
+
         html += `<tr>
-          <td>#${d.id}</td>
-          <td><strong>${d.student_id}</strong></td>
+          <td><code style="font-weight:700; color:#1e3a8a;">${d.utr_number || 'UTR-PENDING'}</code></td>
+          <td><strong>${d.student_id}</strong> (${d.student_name || 'Student'})</td>
           <td>${d.bank_name}</td>
           <td>₹ ${Number(d.loan_amount).toLocaleString('en-IN')}</td>
+          <td>${d.academic_term || 'Full Year'}</td>
           <td>${d.disbursed_date || ''}</td>
-          <td>${d.notes || ''}</td>
+          <td><span class="status ${isRec ? 'approved' : 'pending'}">${d.fee_status || (isRec ? 'Reconciled' : 'Pending')}</span></td>
+          <td>${actionHtml}</td>
         </tr>`;
       });
       html += '</tbody></table>';
@@ -1022,6 +1375,8 @@
         student_id: form.student_id.value.trim(),
         bank_name: form.bank_name.value.trim(),
         loan_amount: parseFloat(form.loan_amount.value),
+        utr_number: form.utr_number.value.trim(),
+        academic_term: form.academic_term.value,
         disbursed_date: form.disbursed_date.value,
         notes: form.notes.value.trim()
       };
@@ -1032,88 +1387,211 @@
           body: JSON.stringify(data)
         });
         if (res.ok) {
-          showNotice('Disbursement recorded successfully!');
+          showNotice('Bank disbursement recorded successfully! Ready for fee ledger reconciliation.');
           form.reset();
-          loadDisbursements();
+          await Promise.all([loadDisbursements(), updateKPIs()]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to record disbursement', true);
         }
-      } catch (e) {}
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
     }
 
+    async function reconcileDisbursement(id) {
+      try {
+        const res = await fetch(API_URL + '/disbursements/' + id + '/reconcile', {
+          method: 'PATCH'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          showNotice(data.message || 'Disbursement successfully reconciled to fee ledger!');
+          await Promise.all([loadDisbursements(), loadStudents(), loadFeeReminders(), updateKPIs()]);
+        } else {
+          showNotice('Failed to reconcile disbursement', true);
+        }
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    // 7. REPORTS: SLA & DEFAULT REMINDERS (Workflow 5 & 8)
     async function loadReports() {
       try {
         const [sumRes, ttRes] = await Promise.all([
           fetch(API_URL + '/reports/summary'),
-          fetch(API_URL + '/reports/turnaround-time')
+          fetch(API_URL + '/reports/turnaround')
         ]);
-        if (sumRes.ok) {
-          const sum = await sumRes.json();
-          document.getElementById('reportsGrid').innerHTML = `
-            <div class="radar-stat-card"><div class="stat-header"><span>TOTAL STUDENTS</span></div><div class="stat-number">${sum.total_students}</div></div>
-            <div class="radar-stat-card"><div class="stat-header"><span>DOCS REQUESTED</span></div><div class="stat-number">${sum.total_requests}</div></div>
-            <div class="radar-stat-card"><div class="stat-header"><span>DOCS ISSUED</span></div><div class="stat-number">${sum.documents_issued}</div></div>
-            <div class="radar-stat-card"><div class="stat-header"><span>TOTAL DISBURSED</span></div><div class="stat-number">₹ ${Number(sum.total_disbursed).toLocaleString('en-IN')}</div></div>
-          `;
-        }
+        if (sumRes.ok) state.summary = await sumRes.json();
         if (ttRes.ok) {
-          const tt = await ttRes.json();
-          let html = '<table class="table"><thead><tr><th>Document Type</th><th>Requests</th><th>Avg Turnaround (Days)</th></tr></thead><tbody>';
-          tt.forEach(item => {
-            html += `<tr><td>${item.document_type}</td><td>${item.count}</td><td>${item.average_days} days</td></tr>`;
-          });
-          html += '</tbody></table>';
-          document.getElementById('turnaroundTable').innerHTML = html;
+          state.turnaround = await ttRes.json();
+          renderTurnaroundReport();
         }
+        updateKPIs();
       } catch (e) {}
     }
 
-    async function loadAiStatus() {
+    function renderTurnaroundReport() {
+      const container = document.getElementById('turnaroundReportContainer');
+      const tt = state.turnaround;
+      if (!tt) return;
+
+      let breakdownRows = '';
+      (tt.by_document_type || []).forEach(b => {
+        breakdownRows += `<tr>
+          <td><strong>${b.document_type}</strong></td>
+          <td>${b.count}</td>
+          <td>${b.average_hours} hrs (${b.average_days} days)</td>
+          <td>${b.sla_met ? '<span style="color:#15803d; font-weight:700;">✓ SLA Met (&le; 24h)</span>' : '<span style="color:#b91c1c; font-weight:700;">✗ Delay Warning</span>'}</td>
+        </tr>`;
+      });
+
+      container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:18px;">
+          <div class="radar-stat-card"><div class="stat-header"><span>TARGET SLA</span></div><div class="stat-number">${tt.target_sla_hours} hrs</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>AVG TURNAROUND</span></div><div class="stat-number">${tt.average_turnaround_hours} hrs</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>SLA COMPLIANCE</span></div><div class="stat-number">${tt.compliance_rate_percent}%</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>DOCUMENTS ISSUED</span></div><div class="stat-number">${tt.total_issued}</div></div>
+        </div>
+        <table class="table">
+          <thead><tr><th>Document Type</th><th>Total Issued</th><th>Average Turnaround</th><th>SLA Target Status</th></tr></thead>
+          <tbody>${breakdownRows || '<tr><td colspan="4" style="text-align:center; color:#64748b;">No documents issued yet to measure turnaround.</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    async function loadFeeReminders() {
       try {
-        const res = await fetch(API_URL + '/ai/status');
+        const res = await fetch(API_URL + '/reports/fee-reminders');
         if (res.ok) {
-          state.aiStatus = await res.json();
-          document.getElementById('activeEngineLabel').innerText = state.aiStatus.active_engine || 'Built-in Verification Engine';
+          state.feeReminders = await res.json();
+          renderFeeReminders();
+          updateKPIs();
         }
       } catch (e) {}
     }
 
-    function updateStats() {
+    function renderFeeReminders() {
+      const container = document.getElementById('feeRemindersTableContainer');
+      const data = state.feeReminders;
+      if (!data || !data.reminders || data.reminders.length === 0) {
+        container.innerHTML = '<p class="empty">No fee reminder records.</p>';
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>Student</th><th>Course</th><th>Total Fee</th><th>Paid</th><th>Outstanding</th><th>Default Protection Status</th><th>Accounts Action Notice</th></tr></thead><tbody>';
+      data.reminders.forEach(r => {
+        const isProt = r.reminder_type === 'LOAN_DEPENDENT_PROTECTED';
+        const isPaid = r.reminder_type === 'PAID_IN_FULL';
+        const statusBadge = isProt
+          ? `<span class="badge-protected">🛡️ PROTECTED: Loan Active</span>`
+          : isPaid
+            ? `<span class="badge-standard" style="background:#e0f2fe; color:#0369a1;">Zero Due</span>`
+            : `<span class="badge-standard" style="background:#fee2e2; color:#991b1b;">⚠️ Standard Reminder</span>`;
+
+        html += `<tr style="${isProt ? 'background:#f0fdf4;' : ''}">
+          <td><strong>${r.student_id}</strong><br><small>${r.name}</small></td>
+          <td>${r.course} (${r.year})</td>
+          <td>₹ ${Number(r.total_fee).toLocaleString('en-IN')}</td>
+          <td>₹ ${Number(r.paid_fee).toLocaleString('en-IN')}</td>
+          <td><strong style="color:${r.balance_due > 0 ? '#b91c1c' : '#15803d'};">₹ ${Number(r.balance_due).toLocaleString('en-IN')}</strong></td>
+          <td>${statusBadge}</td>
+          <td style="font-size:12.5px; line-height:1.4;">${r.notice}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // 8. AGENT 43 INFO DESK (Workflow 6)
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+      appendChatMessage('user', q);
+      await executeQuery(q);
+    }
+
+    async function sendQuickBotQuery() {
+      const input = document.getElementById('botQuickInput');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+      document.getElementById('botQuickBubble').innerText = 'Consulting Agent 43 institutional registry...';
+      try {
+        const res = await fetch(API_URL + '/ai/query', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query: q })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('botQuickBubble').innerText = data.response.replace(/[#*_]/g, '').slice(0, 180) + '...';
+        }
+      } catch (e) {
+        document.getElementById('botQuickBubble').innerText = 'Agent 43 is active.';
+      }
+    }
+
+    function askQuickPrompt(text) {
+      appendChatMessage('user', text);
+      executeQuery(text);
+    }
+
+    async function executeQuery(queryText) {
+      const history = document.getElementById('chatHistoryBox');
+      const loadingId = 'loading-' + Date.now();
+      history.innerHTML += `<div class="chat-msg agent" id="${loadingId}"><em>Agent 43 is reviewing institutional guidelines...</em></div>`;
+      history.scrollTop = history.scrollHeight;
+
+      try {
+        const res = await fetch(API_URL + '/ai/query', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query: queryText })
+        });
+        const loadEl = document.getElementById(loadingId);
+        if (res.ok) {
+          const data = await res.json();
+          let formatted = data.response
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+          
+          let guardrailNotice = data.guardrail_triggered 
+            ? `<div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-weight:700; color:#991b1b; font-size:12px;">⚖️ STRICT GUARDRAIL TRIGGERED: Commercial Lender Recommendation Prohibited</div>`
+            : '';
+
+          loadEl.innerHTML = `${guardrailNotice}${formatted}<br><small style="color:#64748b; font-size:11px; margin-top:6px; display:block;">${data.disclaimer}</small>`;
+        } else {
+          loadEl.innerHTML = 'Error communicating with Agent 43 Info Desk.';
+        }
+      } catch (err) {
+        const loadEl = document.getElementById(loadingId);
+        if (loadEl) loadEl.innerHTML = 'Could not connect to Agent 43 service.';
+      }
+      history.scrollTop = history.scrollHeight;
+    }
+
+    function appendChatMessage(role, text) {
+      const history = document.getElementById('chatHistoryBox');
+      history.innerHTML += `<div class="chat-msg ${role}">${text}</div>`;
+      history.scrollTop = history.scrollHeight;
+    }
+
+    // KPI UPDATER
+    function updateKPIs() {
       document.getElementById('statTotalStudents').innerText = state.students.length;
       document.getElementById('statActiveRequests').innerText = state.requests.filter(r => r.status === 'Pending').length;
-      document.getElementById('statTotalVerifications').innerText = state.verifications.length;
+      
+      const protectedCount = state.students.filter(s => Boolean(s.is_loan_dependent)).length;
+      document.getElementById('statProtectedStudents').innerText = protectedCount;
+
       const totalDisb = state.disbursements.reduce((acc, d) => acc + (d.loan_amount || 0), 0);
       document.getElementById('statTotalDisbursed').innerText = '₹ ' + totalDisb.toLocaleString('en-IN');
-      document.getElementById('statDisbursedCount').innerText = state.disbursements.length;
     }
 
-    function sendBotQuery() {
-      const q = document.getElementById('botInput').value.trim();
-      if (!q) return;
-      processBot(q);
-      document.getElementById('botInput').value = '';
-    }
-
-    function askBotQuick() {
-      processBot('status');
-    }
-
-    function processBot(query) {
-      const q = query.toLowerCase();
-      let reply = '';
-      if (q.includes('student') || q.includes('total')) {
-        reply = `There are ${state.students.length} students registered in Vignan's database.`;
-      } else if (q.includes('request') || q.includes('pending')) {
-        const p = state.requests.filter(r => r.status === 'Pending').length;
-        reply = `There are ${p} pending document requests.`;
-      } else if (q.includes('disburse') || q.includes('loan')) {
-        const t = state.disbursements.reduce((acc, d) => acc + (d.loan_amount || 0), 0);
-        reply = `Total loan disbursement: ₹${t.toLocaleString('en-IN')} across ${state.disbursements.length} records.`;
-      } else {
-        reply = 'Agent 43 Status: All loan verification services, ReportLab circular stamp generator, and barcode fraud models are operational for Vignan University.';
-      }
-      document.getElementById('botResponse').innerText = reply;
-    }
-
-    // Initialize on load
+    // Initial load
     refreshAll();
   </script>
 </body>

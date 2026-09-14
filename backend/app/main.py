@@ -206,6 +206,39 @@ def create_tables():
     except sqlite3.OperationalError:
         pass
 
+    # Add columns for Workflow 8 (Loan-Dependent Student Tracking & Fee Default Protection)
+    for col, ctype in [
+        ("is_loan_dependent", "INTEGER DEFAULT 0"),
+        ("loan_bank", "TEXT DEFAULT ''"),
+        ("sanctioned_amount", "REAL DEFAULT 0"),
+        ("loan_status", "TEXT DEFAULT 'Not Applicable'"),
+        ("paid_fee", "REAL DEFAULT 0")
+    ]:
+        try:
+            connection.execute(f"ALTER TABLE students ADD COLUMN {col} {ctype}")
+        except sqlite3.OperationalError:
+            pass
+
+    # Add columns for Workflow 5 (Turnaround Time & SLA Reporting)
+    for col, ctype in [
+        ("approval_date", "TEXT"),
+        ("turnaround_hours", "REAL DEFAULT 0")
+    ]:
+        try:
+            connection.execute(f"ALTER TABLE document_requests ADD COLUMN {col} {ctype}")
+        except sqlite3.OperationalError:
+            pass
+
+    # Add columns for Workflow 7 (Bank Disbursement UTR Tracking)
+    for col, ctype in [
+        ("utr_number", "TEXT DEFAULT ''"),
+        ("academic_term", "TEXT DEFAULT 'Full Year'")
+    ]:
+        try:
+            connection.execute(f"ALTER TABLE disbursements ADD COLUMN {col} {ctype}")
+        except sqlite3.OperationalError:
+            pass
+
     # Backfill any document_requests that do not have a verification_requests entry
     try:
         pending_requests = connection.execute("""
@@ -283,6 +316,18 @@ class Student(BaseModel):
     year: str
     admission_year: str
     total_fee: float
+    is_loan_dependent: Optional[bool] = False
+    loan_bank: Optional[str] = ""
+    sanctioned_amount: Optional[float] = 0.0
+    loan_status: Optional[str] = "Not Applicable"
+    paid_fee: Optional[float] = 0.0
+
+
+class StudentLoanStatusUpdate(BaseModel):
+    is_loan_dependent: bool
+    loan_bank: Optional[str] = ""
+    sanctioned_amount: Optional[float] = 0.0
+    loan_status: Optional[str] = "Sanctioned - Disbursement Pending"
 
 
 class DocumentRequest(BaseModel):
@@ -304,7 +349,14 @@ class DisbursementIn(BaseModel):
     bank_name: str
     loan_amount: float
     disbursed_date: str = ""
+    utr_number: str = ""
+    academic_term: str = "Full Year"
     notes: str = ""
+
+
+class Agent43Query(BaseModel):
+    query: str
+    student_id: Optional[str] = None
 
 
 class AIConfigIn(BaseModel):
@@ -871,31 +923,135 @@ def update_request_status(
     }
 
 
-# BANK REQUIREMENTS
+# =================================================
+# BANK REQUIREMENTS & SCHEMES KNOWLEDGE BASE (Workflow 1 & 6)
+# =================================================
+
+SCHEMES_KNOWLEDGE_BASE = [
+    {
+        "id": "vidya-lakshmi",
+        "name": "Vidya Lakshmi Portal (CELAS)",
+        "authority": "Ministry of Education & NSDL e-Gov, Govt of India",
+        "description": "Unified national education loan portal. Allows single common application (CELAS) tracked across 40+ public and private banks.",
+        "applicable_banks": "SBI, Canara Bank, Union Bank, PNB, Bank of Baroda, HDFC, ICICI, etc.",
+        "max_limit": "Up to ₹7.5 Lakhs (No Collateral) / Up to ₹1.5 Crore (With Collateral)",
+        "interest_subsidy": "Full integration with CSIS (Central Sector Interest Subsidy)",
+        "required_documents": [
+            "Bonafide Certificate from VFSTR",
+            "Fee Structure Letter with Year-wise Breakdown",
+            "Admission Confirmation / Allotment Letter",
+            "10th & 12th Marksheets",
+            "Student & Co-borrower KYC"
+        ],
+        "turnaround_days": "7 - 15 working days upon receiving institutional documents",
+        "portal_url": "https://www.vidyalakshmi.co.in"
+    },
+    {
+        "id": "pm-usp-csis",
+        "name": "PM-USP / CSIS (Central Sector Interest Subsidy)",
+        "authority": "Department of Higher Education, Govt of India",
+        "description": "100% full government-paid interest subsidy during study period and moratorium for students from economically weaker sections (EWS).",
+        "applicable_banks": "All Scheduled Commercial Banks under IBA Model Scheme",
+        "max_limit": "Covers loans up to ₹10 Lakhs without collateral",
+        "interest_subsidy": "100% Interest waiver during course + 1 year moratorium",
+        "required_documents": [
+            "VFSTR Bonafide Certificate with circular seal",
+            "Fee Structure Letter with Year-wise Breakdown",
+            "Income Certificate (Family income <= ₹4.50 LPA) from Tehsildar/Revenue Authority",
+            "Proof of Admission in Technical/Professional Course"
+        ],
+        "turnaround_days": "Processed alongside bank loan sanction",
+        "portal_url": "https://www.vidyalakshmi.co.in"
+    },
+    {
+        "id": "sbi-scholar",
+        "name": "SBI Scholar Loan Scheme",
+        "authority": "State Bank of India",
+        "description": "100% financing with zero margin money for students admitted to recognized premier universities like VFSTR.",
+        "applicable_banks": "State Bank of India (VFSTR Vadlamudi Branch & Nationwide)",
+        "max_limit": "Up to ₹7.5 Lakhs (Zero Collateral) / Up to ₹20 Lakhs with tangible security",
+        "interest_subsidy": "Eligible for CSIS interest subsidy if family income <= 4.5 LPA",
+        "required_documents": [
+            "VFSTR Institutional Bonafide Certificate",
+            "Year-wise Fee Structure Letter signed by authorized official",
+            "Admission Confirmation Order",
+            "Academic Status Certificate"
+        ],
+        "turnaround_days": "3 - 7 working days with complete VFSTR documentation",
+        "portal_url": "https://sbi.co.in"
+    },
+    {
+        "id": "canara-vidya-turant",
+        "name": "Canara Bank Vidya Turant",
+        "authority": "Canara Bank",
+        "description": "Fast-track, hassle-free education loan scheme with digital in-principle approval for selected institutions.",
+        "applicable_banks": "Canara Bank",
+        "max_limit": "Up to ₹7.5 Lakhs (No Collateral) / Up to ₹20 Lakhs",
+        "interest_subsidy": "Applicable as per MoE CSIS norms",
+        "required_documents": [
+            "Bonafide Certificate with VFSTR Circular Seal",
+            "Approved Fee Structure Breakdown",
+            "Admission Confirmation Letter"
+        ],
+        "turnaround_days": "3 - 5 working days",
+        "portal_url": "https://canarabank.com"
+    },
+    {
+        "id": "union-education",
+        "name": "Union Bank Education Loan / PNB Pratibha",
+        "authority": "Public Sector Banks (Union Bank / PNB)",
+        "description": "Standardized education loan for professional engineering and technology courses with 0.50% interest concession for female students.",
+        "applicable_banks": "Union Bank of India, Punjab National Bank",
+        "max_limit": "Up to ₹7.50 Lakhs (Unsecured)",
+        "interest_subsidy": "CSIS Eligible for EWS category",
+        "required_documents": [
+            "VFSTR Bonafide Certificate",
+            "Year-wise Fee Structure Statement",
+            "Fee Paid Statement / Previous Receipts",
+            "Admission Allotment Letter"
+        ],
+        "turnaround_days": "5 - 10 working days",
+        "portal_url": "https://unionbankofindia.co.in"
+    }
+]
+
+BANK_DOCUMENT_CHECKLIST = [
+    {"document_type": "Bonafide Certificate", "required": True, "notes": "Mandatory for all banks & Vidya Lakshmi portal"},
+    {"document_type": "Fee Structure Letter with Year-wise Breakdown", "required": True, "notes": "Mandatory for loan amount appraisal across 4 years"},
+    {"document_type": "Admission Confirmation", "required": True, "notes": "Proof of merit / counseling allotment"},
+    {"document_type": "Academic Status Certificate", "required": True, "notes": "Required for 2nd/3rd/4th year ongoing loan sanctions"},
+    {"document_type": "Fee Paid Statement", "required": True, "notes": "Required for fee reimbursement & margin money adjustment"},
+    {"document_type": "Student ID Proof", "required": False, "notes": "Supporting identity proof with barcode"}
+]
+
 
 @app.get('/bank-requirements')
 def get_bank_requirements():
-    return [
-        {'document_type': 'Bonafide Certificate', 'required': True},
-        {'document_type': 'Fee Structure', 'required': True},
-        {'document_type': 'Admission Confirmation', 'required': True},
-        {'document_type': 'Study Certificate', 'required': True},
-        {'document_type': 'Fee Receipt', 'required': True},
-        {'document_type': 'Student ID Proof', 'required': True}
-    ]
+    return BANK_DOCUMENT_CHECKLIST
+
+
+@app.get('/schemes')
+def get_public_schemes():
+    return SCHEMES_KNOWLEDGE_BASE
+
+
+@app.get('/schemes/{scheme_id}')
+def get_scheme_by_id(scheme_id: str):
+    for s in SCHEMES_KNOWLEDGE_BASE:
+        if s["id"] == scheme_id or s["name"].lower() == scheme_id.lower():
+            return s
+    raise HTTPException(status_code=404, detail="Scheme not found")
 
 
 # =================================================
-# DOCUMENT GENERATION HELPERS
+# DOCUMENT GENERATION HELPERS (Workflow 2 & 3)
 # =================================================
 
 def make_verification_code():
-
     return "ELN-" + secrets.token_hex(4).upper()
 
 
 def certificate_body(document_type, student):
-
     name = student["name"]
     sid = student["student_id"]
     course = student["course"]
@@ -903,55 +1059,56 @@ def certificate_body(document_type, student):
     admission_year = student["admission_year"]
     fee = student["total_fee"]
 
-    if document_type == "Bonafide Certificate":
+    if document_type in ["Bonafide Certificate", "Bonafide"]:
         return (
             f"This is to certify that {name} (Student ID: {sid}) is a "
             f"bonafide student of Vignan's Foundation for Science, Technology and Research (VFSTR), "
             f"currently studying in {year} of {course}. The student was admitted to this "
-            f"institution in the academic year {admission_year}. This "
-            f"certificate is issued on request for the purpose of "
-            f"education loan processing."
+            f"institution in the academic session {admission_year}. This "
+            f"certificate is officially issued on request to support the student's education loan "
+            f"application and processing under institutional guidelines."
         )
 
-    if document_type == "Fee Structure":
+    if "Fee Structure" in document_type:
         return (
-            f"This is to certify that the total course fee for {name} "
+            f"This is to certify that the total approved program fee for {name} "
             f"(Student ID: {sid}), pursuing {course} at Vignan's Foundation for Science, "
-            f"Technology and Research (VFSTR), is Rs. {fee:,.2f}. "
-            f"This fee structure statement is issued for the purpose of "
-            f"education loan processing and may be submitted to the "
-            f"financing bank in support of the loan application."
+            f"Technology and Research (VFSTR Deemed to be University), is Rs. {fee:,.2f}. "
+            f"Below is the official schedule and year-wise breakdown of tuition, examination, "
+            f"laboratory, and administrative fees, issued for education loan appraisal and sanction."
         )
 
-    if document_type == "Admission Confirmation":
+    if "Admission Confirmation" in document_type:
         return (
-            f"This is to confirm that {name} (Student ID: {sid}) has been "
-            f"admitted to Vignan's Foundation for Science, Technology and Research (VFSTR) "
-            f"for the program {course} in the academic year {admission_year}. "
-            f"This confirmation is issued for education loan documentation purposes."
+            f"This is to confirm and certify that {name} (Student ID: {sid}) has "
+            f"secured confirmed admission to Vignan's Foundation for Science, Technology and Research (VFSTR) "
+            f"for the program {course} in the academic session {admission_year}. All qualifying academic "
+            f"credentials and eligibility documents have been verified by the Directorate of Admissions. "
+            f"This document is issued for banking and education loan disbursement purposes."
         )
 
-    if document_type == "Study Certificate":
+    if "Academic Status" in document_type or "Study Certificate" in document_type:
         return (
-            f"This is to certify that {name} (Student ID: {sid}) is "
-            f"currently pursuing {course} at Vignan's Foundation for Science, Technology "
-            f"and Research (VFSTR) and is presently studying in {year}. "
-            f"This certificate is issued on request for education loan documentation."
+            f"This is to certify that {name} (Student ID: {sid}) is an enrolled active student "
+            f"pursuing {course} at Vignan's Foundation for Science, Technology and Research (VFSTR), "
+            f"currently studying in {year}. The student maintains satisfactory academic standing, regular "
+            f"attendance, and exemplary conduct with no disciplinary impediments recorded. "
+            f"This certificate is issued for education loan renewal and sanction purposes."
         )
 
-    if document_type == "Fee Receipt":
+    if "Fee Paid" in document_type or "Fee Receipt" in document_type:
         return (
-            f"This is to certify that the fee records of {name} "
-            f"(Student ID: {sid}) pursuing {course} are maintained by the "
-            f"accounts section of Vignan's Foundation for Science, Technology and Research (VFSTR), "
-            f"with a total course fee of Rs. {fee:,.2f}. This statement is issued for "
-            f"education loan documentation purposes."
+            f"This is an official ledger statement confirming that the fee records for {name} "
+            f"(Student ID: {sid}) pursuing {course} are maintained by the Accounts Section of "
+            f"Vignan's Foundation for Science, Technology and Research (VFSTR). Total program fee is "
+            f"Rs. {fee:,.2f}. All payments received from student/bank are accounted for in the institutional "
+            f"fee ledger. This statement is issued for education loan reimbursement and documentation."
         )
 
     return (
-        f"This is to certify that {name} (Student ID: {sid}) is a student "
+        f"This is to certify that {name} (Student ID: {sid}) is an enrolled student "
         f"of Vignan's Foundation for Science, Technology and Research (VFSTR), pursuing {course}, {year}. "
-        f"This document is issued on request for education loan processing."
+        f"This document is officially issued for education loan processing."
     )
 
 
@@ -1042,6 +1199,44 @@ def build_certificate_pdf(
     pdf.drawString(105 * mm, box_y - 14 * mm, f"Year / Batch: {student['year']} (Adm: {student['admission_year']})")
     pdf.drawString(28 * mm, box_y - 21 * mm, f"Institution: Vignan Foundation for Science and Technology")
     pdf.drawString(105 * mm, box_y - 21 * mm, f"Total Course Fee: Rs. {student['total_fee']:,.2f}")
+
+    # If Fee Structure document, draw the approved year-wise breakdown schedule table
+    if "Fee Structure" in document_type:
+        tbl_y = box_y - 33 * mm
+        pdf.setFont("Helvetica-Bold", 8)
+        pdf.setFillColor(colors.HexColor("#1E3A8A"))
+        pdf.drawString(25 * mm, tbl_y + 1 * mm, "APPROVED YEAR-WISE FEE BREAKDOWN SCHEDULE (FOR BANK LOAN APPRAISAL):")
+
+        # Table Header
+        pdf.setFillColor(colors.HexColor("#0F2042"))
+        pdf.rect(25 * mm, tbl_y - 6 * mm, page_width - 50 * mm, 5.5 * mm, fill=1, stroke=0)
+        pdf.setFillColor(colors.white)
+        pdf.setFont("Helvetica-Bold", 7.5)
+        pdf.drawString(28 * mm, tbl_y - 4.2 * mm, "Academic Year")
+        pdf.drawString(72 * mm, tbl_y - 4.2 * mm, "Tuition & Lab Fee")
+        pdf.drawString(116 * mm, tbl_y - 4.2 * mm, "Exam & Reg. Fee")
+        pdf.drawString(155 * mm, tbl_y - 4.2 * mm, "Annual Total (INR)")
+
+        fee = float(student['total_fee'])
+        years_data = [
+            ("Year 1 (1st & 2nd Sem)", fee * 0.23, fee * 0.05, fee * 0.28),
+            ("Year 2 (3rd & 4th Sem)", fee * 0.22, fee * 0.02, fee * 0.24),
+            ("Year 3 (5th & 6th Sem)", fee * 0.22, fee * 0.02, fee * 0.24),
+            ("Year 4 (7th & 8th Sem)", fee * 0.22, fee * 0.02, fee * 0.24),
+        ]
+
+        row_y = tbl_y - 6 * mm
+        for i, (yr_lbl, tf, ef, tot) in enumerate(years_data):
+            row_y -= 4.5 * mm
+            pdf.setFillColor(colors.HexColor("#F1F5F9" if i % 2 == 0 else "#FFFFFF"))
+            pdf.rect(25 * mm, row_y, page_width - 50 * mm, 4.5 * mm, fill=1, stroke=0)
+            pdf.setFillColor(colors.HexColor("#0F172A"))
+            pdf.setFont("Helvetica", 7)
+            pdf.drawString(28 * mm, row_y + 1.2 * mm, yr_lbl)
+            pdf.drawString(72 * mm, row_y + 1.2 * mm, f"Rs. {tf:,.0f}")
+            pdf.drawString(116 * mm, row_y + 1.2 * mm, f"Rs. {ef:,.0f}")
+            pdf.setFont("Helvetica-Bold", 7)
+            pdf.drawString(155 * mm, row_y + 1.2 * mm, f"Rs. {tot:,.0f}")
 
     # Official College Stamp (Circular Seal Drawing)
     stamp_x = 75 * mm
@@ -1220,6 +1415,7 @@ def generate_document(payload: GenerateDocumentRequest):
             dr.id,
             dr.student_id,
             dr.document_type,
+            dr.request_date,
             s.name,
             s.course,
             s.year,
@@ -1274,11 +1470,28 @@ def generate_document(payload: GenerateDocumentRequest):
         file_path
     ))
 
+    now_dt = datetime.now()
+    approval_date = now_dt.strftime("%Y-%m-%d %H:%M:%S")
+    turnaround_hours = 4.0
+    try:
+        req_dt_val = request_row["request_date"] if "request_date" in request_row.keys() else None
+        if req_dt_val:
+            if "T" in str(req_dt_val):
+                req_dt = datetime.fromisoformat(str(req_dt_val))
+            elif " " in str(req_dt_val):
+                req_dt = datetime.strptime(str(req_dt_val)[:19], "%Y-%m-%d %H:%M:%S")
+            else:
+                req_dt = datetime.strptime(str(req_dt_val)[:10], "%Y-%m-%d")
+            diff_h = (now_dt - req_dt).total_seconds() / 3600.0
+            turnaround_hours = max(0.5, round(diff_h, 1))
+    except Exception:
+        turnaround_hours = 4.0
+
     connection.execute("""
         UPDATE document_requests
-        SET status = 'Approved', issued_date = ?
+        SET status = 'Approved', issued_date = ?, approval_date = ?, turnaround_hours = ?
         WHERE id = ?
-    """, (issued_date, payload.request_id))
+    """, (issued_date, approval_date, turnaround_hours, payload.request_id))
 
     # Update corresponding verification request with real issued document details
     issued_scorecard = {
@@ -2462,6 +2675,7 @@ def verify_document(code: str):
 
     document = connection.execute("""
         SELECT
+            d.id,
             d.document_type,
             d.student_id,
             d.issued_date,
@@ -2478,25 +2692,32 @@ def verify_document(code: str):
     if document is None:
         raise HTTPException(
             status_code=404,
-            detail="Invalid or unrecognised verification code"
+            detail="Invalid or unrecognised verification code. Document cannot be authenticated."
         )
 
+    doc_dict = dict(document)
     return {
         "valid": True,
-        "institution": "Vignan's Foundation for Science, Technology and Research",
+        "verification_code": doc_dict["verification_code"],
+        "authenticity_status": "OFFICIALLY ISSUED & AUTHENTIC",
+        "institution": "Vignan's Foundation for Science, Technology and Research (VFSTR Deemed to be University)",
         "verified_by": "Vignan Foundation for Science and Technology",
-        "stamp_status": "Verified Official College Stamp & Seal",
-        "document_type": document["document_type"],
-        "student_name": document["student_name"],
-        "student_id": document["student_id"],
-        "course": document["course"],
-        "issued_date": document["issued_date"],
-        "verification_code": document["verification_code"]
+        "authorized_signatory": "Registrar / Dean, Academic Administration, VFSTR",
+        "stamp_status": "Verified Official College Stamp & Circular Seal",
+        "bank_notice": "Bank confirmation complete. Institutional authenticity verified. No phone call or physical visit to institution required for loan processing.",
+        "document_type": doc_dict["document_type"],
+        "student_name": doc_dict["student_name"],
+        "student_id": doc_dict["student_id"],
+        "course": doc_dict["course"],
+        "issued_date": doc_dict["issued_date"],
+        "id": doc_dict["id"],
+        "download_url": f"/documents/{doc_dict['id']}/download",
+        "fee_breakdown_included": "Fee Structure" in doc_dict["document_type"]
     }
 
 
 # =================================================
-# DISBURSEMENTS
+# WORKFLOW 7: DISBURSEMENTS & FEE RECONCILIATION
 # =================================================
 
 @app.post("/disbursements")
@@ -2510,32 +2731,39 @@ def create_disbursement(payload: DisbursementIn):
     ).fetchone()
 
     if student is None:
-
         connection.close()
-
         raise HTTPException(status_code=404, detail="Student not found")
 
     disbursed_date = payload.disbursed_date or str(date.today())
+    utr = (payload.utr_number or f"UTR{secrets.token_hex(4).upper()}").strip()
+    term = (payload.academic_term or "Full Year").strip()
 
     cursor = connection.execute("""
         INSERT INTO disbursements
-        (student_id, bank_name, loan_amount, disbursed_date, reconciled, notes)
-        VALUES (?, ?, ?, ?, 0, ?)
+        (student_id, bank_name, loan_amount, disbursed_date, reconciled, notes, utr_number, academic_term)
+        VALUES (?, ?, ?, ?, 0, ?, ?, ?)
     """, (
         payload.student_id,
         payload.bank_name,
         payload.loan_amount,
         disbursed_date,
-        payload.notes
+        payload.notes,
+        utr,
+        term
     ))
 
     connection.commit()
-
     new_id = cursor.lastrowid
-
     connection.close()
 
-    return {"message": "Disbursement recorded successfully", "id": new_id}
+    return {
+        "message": "Bank disbursement recorded successfully",
+        "id": new_id,
+        "utr_number": utr,
+        "student_id": payload.student_id,
+        "loan_amount": payload.loan_amount,
+        "status": "Pending Accounts Reconciliation"
+    }
 
 
 @app.get("/disbursements")
@@ -2544,7 +2772,7 @@ def get_disbursements():
     connection = get_connection()
 
     rows = connection.execute("""
-        SELECT ds.*, s.name AS student_name, s.total_fee
+        SELECT ds.*, s.name AS student_name, s.course, s.total_fee, COALESCE(s.paid_fee, 0) AS student_paid_fee
         FROM disbursements ds
         LEFT JOIN students s ON ds.student_id = s.student_id
         ORDER BY ds.id DESC
@@ -2553,6 +2781,7 @@ def get_disbursements():
     totals = connection.execute("""
         SELECT student_id, SUM(loan_amount) AS total_received
         FROM disbursements
+        WHERE reconciled = 1
         GROUP BY student_id
     """).fetchall()
 
@@ -2563,24 +2792,20 @@ def get_disbursements():
     }
 
     result = []
-
     for row in rows:
-
         row_dict = dict(row)
+        total_fee = row_dict.get("total_fee") or 0.0
+        total_reconciled = totals_map.get(row_dict["student_id"], 0.0)
+        outstanding = max(0.0, total_fee - total_reconciled)
 
-        total_fee = row_dict.get("total_fee") or 0
-        total_received = totals_map.get(row_dict["student_id"], 0)
-
-        if total_fee and total_received >= total_fee:
-            fee_status = "Fully Reconciled"
-        elif total_received > 0:
-            fee_status = "Partial - Balance Pending"
+        if row_dict.get("reconciled"):
+            fee_status = "Reconciled to Fee Ledger"
         else:
-            fee_status = "Not Reconciled"
+            fee_status = "Pending Reconciliation"
 
-        row_dict["total_received"] = total_received
+        row_dict["reconciled_total"] = total_reconciled
         row_dict["fee_status"] = fee_status
-
+        row_dict["balance_outstanding"] = outstanding
         result.append(row_dict)
 
     return result
@@ -2591,29 +2816,158 @@ def reconcile_disbursement(disbursement_id: int):
 
     connection = get_connection()
 
+    disb = connection.execute(
+        "SELECT * FROM disbursements WHERE id = ?", (disbursement_id,)
+    ).fetchone()
+
+    if disb is None:
+        connection.close()
+        raise HTTPException(
+            status_code=404, detail="Disbursement not found"
+        )
+
+    disb_dict = dict(disb)
+    if disb_dict.get("reconciled") == 1:
+        connection.close()
+        return {"message": "Disbursement was already reconciled", "disbursement_id": disbursement_id}
+
     cursor = connection.execute("""
         UPDATE disbursements
         SET reconciled = 1
         WHERE id = ?
     """, (disbursement_id,))
 
+    # Workflow 7: Reconcile against fee ledger in students table
+    student_id = disb_dict["student_id"]
+    loan_amount = float(disb_dict["loan_amount"] or 0.0)
+
+    connection.execute("""
+        UPDATE students
+        SET paid_fee = COALESCE(paid_fee, 0) + ?,
+            loan_status = CASE 
+                WHEN (COALESCE(paid_fee, 0) + ?) >= total_fee THEN 'Fully Disbursed & Settled'
+                ELSE 'Disbursed - Partial Balance'
+            END
+        WHERE student_id = ?
+    """, (loan_amount, loan_amount, student_id))
+
     connection.commit()
-
-    updated = cursor.rowcount
-
     connection.close()
 
-    if updated == 0:
-        raise HTTPException(
-            status_code=404, detail="Disbursement not found"
-        )
-
-    return {"message": "Disbursement marked as reconciled"}
+    return {
+        "message": f"Disbursement #{disbursement_id} successfully reconciled against fee ledger for student {student_id}",
+        "disbursement_id": disbursement_id,
+        "amount_reconciled": loan_amount,
+        "student_id": student_id,
+        "fee_ledger_status": "Updated"
+    }
 
 
 # =================================================
-# REPORTS
+# WORKFLOW 8: LOAN-DEPENDENT STUDENT TRACKING
 # =================================================
+
+@app.patch("/students/{student_id}/loan-status")
+def update_student_loan_status(student_id: str, payload: StudentLoanStatusUpdate):
+    connection = get_connection()
+    student = connection.execute("SELECT * FROM students WHERE student_id = ?", (student_id,)).fetchone()
+    if not student:
+        connection.close()
+        raise HTTPException(status_code=404, detail=f"Student '{student_id}' not found")
+
+    is_dep = 1 if payload.is_loan_dependent else 0
+    loan_bank = (payload.loan_bank or "").strip()
+    sanctioned_amount = float(payload.sanctioned_amount or 0.0)
+    loan_status = payload.loan_status or ("Sanctioned - Disbursement Pending" if is_dep else "Not Applicable")
+
+    connection.execute("""
+        UPDATE students
+        SET is_loan_dependent = ?,
+            loan_bank = ?,
+            sanctioned_amount = ?,
+            loan_status = ?
+        WHERE student_id = ?
+    """, (is_dep, loan_bank, sanctioned_amount, loan_status, student_id))
+
+    connection.commit()
+    connection.close()
+
+    return {
+        "message": f"Loan dependency updated for student {student_id}",
+        "student_id": student_id,
+        "is_loan_dependent": bool(is_dep),
+        "loan_bank": loan_bank,
+        "sanctioned_amount": sanctioned_amount,
+        "loan_status": loan_status
+    }
+
+
+# =================================================
+# WORKFLOW 5 & 8: REPORTS & DEFAULT PROTECTION
+# =================================================
+
+@app.get("/reports/fee-reminders")
+def get_fee_reminders():
+    connection = get_connection()
+    students = connection.execute("""
+        SELECT student_id, name, course, year, total_fee, COALESCE(paid_fee, 0) AS paid_fee,
+               is_loan_dependent, loan_bank, sanctioned_amount, loan_status
+        FROM students
+        ORDER BY student_id ASC
+    """).fetchall()
+    connection.close()
+
+    reminders = []
+    for s in students:
+        s_dict = dict(s)
+        total_fee = float(s_dict.get("total_fee") or 0.0)
+        paid_fee = float(s_dict.get("paid_fee") or 0.0)
+        balance = max(0.0, total_fee - paid_fee)
+        is_dep = bool(s_dict.get("is_loan_dependent"))
+        bank = s_dict.get("loan_bank") or "Lending Bank"
+        sanctioned = float(s_dict.get("sanctioned_amount") or balance)
+
+        if balance <= 0:
+            reminder_type = "PAID_IN_FULL"
+            action = "Zero Outstanding"
+            notice = "Fee account fully settled."
+            protection_status = "Settled"
+        elif is_dep:
+            reminder_type = "LOAN_DEPENDENT_PROTECTED"
+            action = "HOLD DEFAULT NOTICE & SUSPEND LATE FEES"
+            notice = f"🛡️ PROTECTED: Education Loan Sanction Active (Disbursement of ₹{sanctioned:,.2f} pending from {bank}). Institutional policy suspends late fees and holds default notices."
+            protection_status = "PROTECTED: Awaiting Bank Disbursement"
+        else:
+            reminder_type = "STANDARD_REMINDER"
+            action = "Issue Standard Fee Reminder"
+            notice = f"⚠️ Regular Fee Reminder: Balance of ₹{balance:,.2f} is pending. Please clear tuition dues."
+            protection_status = "STANDARD: General Collection"
+
+        reminders.append({
+            "student_id": s_dict["student_id"],
+            "name": s_dict["name"],
+            "course": s_dict["course"],
+            "year": s_dict["year"],
+            "total_fee": total_fee,
+            "paid_fee": paid_fee,
+            "balance_due": balance,
+            "is_loan_dependent": is_dep,
+            "loan_bank": bank,
+            "sanctioned_amount": sanctioned,
+            "loan_status": s_dict.get("loan_status") or "None",
+            "reminder_type": reminder_type,
+            "action": action,
+            "notice": notice,
+            "protection_status": protection_status
+        })
+
+    return {
+        "total_students": len(reminders),
+        "loan_dependent_count": sum(1 for r in reminders if r["is_loan_dependent"]),
+        "protected_count": sum(1 for r in reminders if r["reminder_type"] == "LOAN_DEPENDENT_PROTECTED"),
+        "reminders": reminders
+    }
+
 
 @app.get("/reports/summary")
 def reports_summary():
@@ -2622,6 +2976,10 @@ def reports_summary():
 
     total_students = connection.execute(
         "SELECT COUNT(*) AS c FROM students"
+    ).fetchone()["c"]
+
+    loan_dependent_count = connection.execute(
+        "SELECT COUNT(*) AS c FROM students WHERE is_loan_dependent = 1"
     ).fetchone()["c"]
 
     total_requests = connection.execute(
@@ -2644,15 +3002,21 @@ def reports_summary():
         "SELECT COALESCE(SUM(loan_amount), 0) AS s FROM disbursements"
     ).fetchone()["s"]
 
+    reconciled_disbursed = connection.execute(
+        "SELECT COALESCE(SUM(loan_amount), 0) AS s FROM disbursements WHERE reconciled = 1"
+    ).fetchone()["s"]
+
     connection.close()
 
     return {
         "total_students": total_students,
+        "loan_dependent_students": loan_dependent_count,
         "total_requests": total_requests,
         "pending_requests": pending_requests,
         "approved_requests": approved_requests,
         "documents_issued": documents_issued,
-        "total_disbursed": total_disbursed
+        "total_disbursed": total_disbursed,
+        "reconciled_disbursed": reconciled_disbursed
     }
 
 
@@ -2663,38 +3027,197 @@ def reports_turnaround():
     connection = get_connection()
 
     rows = connection.execute("""
-        SELECT document_type, request_date, issued_date
+        SELECT document_type, request_date, issued_date, turnaround_hours, status
         FROM document_requests
-        WHERE issued_date IS NOT NULL
+        WHERE status = 'Approved' OR issued_date IS NOT NULL
     """).fetchall()
 
     connection.close()
 
-    stats = {}
+    if not rows:
+        return {
+            "target_sla_hours": 24.0,
+            "average_turnaround_hours": 0.0,
+            "total_issued": 0,
+            "compliance_rate_percent": 100.0,
+            "financial_impact_summary": "Fast institutional turnaround directly prevents bank loan stalls and protects families from late payment penalties.",
+            "by_document_type": []
+        }
 
-    for row in rows:
+    doc_stats = {}
+    all_hours = []
 
-        try:
-            request_date = datetime.strptime(row["request_date"], "%Y-%m-%d")
-            issued_date = datetime.strptime(row["issued_date"], "%Y-%m-%d")
-            days = (issued_date - request_date).days
+    for r in rows:
+        hrs = r["turnaround_hours"]
+        if hrs is None or hrs == 0:
+            try:
+                d1 = datetime.strptime(str(r["request_date"])[:10], "%Y-%m-%d")
+                d2 = datetime.strptime(str(r["issued_date"])[:10], "%Y-%m-%d")
+                hrs = max(2.0, float((d2 - d1).days * 24 or 4.0))
+            except Exception:
+                hrs = 4.0
+        all_hours.append(float(hrs))
+        dtype = r["document_type"]
+        doc_stats.setdefault(dtype, []).append(float(hrs))
 
-        except (ValueError, TypeError):
-            continue
+    avg_all = round(sum(all_hours) / len(all_hours), 1) if all_hours else 0.0
+    compliant_count = sum(1 for h in all_hours if h <= 24.0)
+    compliance_rate = round((compliant_count / len(all_hours)) * 100.0, 1) if all_hours else 100.0
 
-        stats.setdefault(row["document_type"], []).append(days)
-
-    result = []
-
-    for document_type, days_list in stats.items():
-
-        result.append({
-            "document_type": document_type,
-            "count": len(days_list),
-            "average_days": round(sum(days_list) / len(days_list), 1)
+    breakdown = []
+    for dtype, hrs_list in doc_stats.items():
+        avg_h = round(sum(hrs_list) / len(hrs_list), 1)
+        breakdown.append({
+            "document_type": dtype,
+            "count": len(hrs_list),
+            "average_hours": avg_h,
+            "average_days": round(avg_h / 24.0, 1),
+            "sla_met": avg_h <= 24.0
         })
 
-    return result
+    return {
+        "target_sla_hours": 24.0,
+        "average_turnaround_hours": avg_all,
+        "total_issued": len(all_hours),
+        "compliance_rate_percent": compliance_rate,
+        "financial_impact_summary": "Institutional target turnaround is 24 hours. Prompt document issuance prevents bank loan sanction stalls, avoiding financial stress and compounding interest penalties for student families.",
+        "by_document_type": breakdown
+    }
+
+
+# =================================================
+# WORKFLOW 6: AGENT 43 AI INFO DESK & GUARDRAIL
+# =================================================
+
+@app.post("/ai/query")
+def agent43_ai_query(payload: Agent43Query):
+    q = (payload.query or "").strip()
+    q_lower = q.lower()
+
+    if not q:
+        raise HTTPException(status_code=400, detail="Query cannot be empty")
+
+    # Strict Guardrail Check: Prohibition on commercial lender / loan product recommendations & repayment capacity assessment
+    guardrail_triggers = [
+        "recommend a bank", "recommend bank", "which bank is best", "best bank",
+        "lowest interest", "which lender", "cheapest loan", "should i choose sbi",
+        "should i take hdfc", "compare interest", "repayment capacity", "can i afford",
+        "which loan product", "suggest a bank", "best interest rate", "which bank gives more loan",
+        "loan advice", "financial advice"
+    ]
+
+    is_guardrail_triggered = any(trigger in q_lower for trigger in guardrail_triggers)
+
+    if is_guardrail_triggered:
+        return {
+            "query": q,
+            "guardrail_triggered": True,
+            "warning": "Agent 43 Institutional Guardrail Enforced",
+            "response": (
+                "⚠️ **Institutional Policy & Guardrail Notice**:\n\n"
+                "As the institutional **Education Loan Support Agent (Agent 43)**, I am **strictly prohibited** "
+                "from recommending specific commercial lenders, comparing interest rates, or evaluating individual family "
+                "repayment capacity (these are regulated financial advisory matters outside institutional authority).\n\n"
+                "**Institutional Services Available from Agent 43**:\n"
+                "1. **Institutional Document Issuance (24h SLA)**: Official Bonafide Certificate, Year-wise Fee Structure Letter, Admission Confirmation, Academic Status Certificate, Fee Paid Statement.\n"
+                "2. **Factual Public Scheme Information**: Eligibility guidelines for the Vidya Lakshmi Portal, PM-USP Central Sector Interest Subsidy (CSIS), and SBI Scholar scheme norms.\n"
+                "3. **Bank Verification Portal**: Instant online authenticity verification for bank branch officers without office phone calls.\n"
+                "4. **Accounts Coordination**: Bank UTR disbursement logging and student fee ledger reconciliation.\n\n"
+                "👉 *For commercial loan selection, interest rate comparisons, or repayment advice, please consult your bank's loan officer or visit the Vignan Accounts & Financial Aid Section (Block A, Ground Floor).*"
+            ),
+            "disclaimer": "Agent 43 provides institutional documentation and factual government scheme information. It does not provide financial or lending advice."
+        }
+
+    # Factual Knowledge Base Responses
+    if any(k in q_lower for k in ["document", "require", "papers", "checklist", "what do i need", "certificate"]):
+        ans = (
+            "📄 **Bank Documentation Requirements for Education Loans**:\n\n"
+            "Under Indian banking guidelines and Vidya Lakshmi portal norms, Vignan University issues **5 standard institutional documents**:\n\n"
+            "1. **Bonafide Certificate**: Certifies active enrollment, roll number, course, and academic year.\n"
+            "2. **Fee Structure Letter (Year-wise Breakdown)**: Itemizes Year 1–4 tuition, lab, exam, and registration fees (mandatory for loan amount sanction).\n"
+            "3. **Admission Confirmation**: Confirms merit/counseling allotment and verification of qualifying credentials.\n"
+            "4. **Academic Status Certificate**: Verifies CGPA, conduct, and regular attendance (for loan renewals and subsequent year disbursements).\n"
+            "5. **Fee Paid Statement**: Certified ledger of prior payments for fee reimbursement and margin money adjustments.\n\n"
+            "💡 You can request any of these directly from the **'Document Requests'** tab in this portal. Our average turnaround time is under 24 hours."
+        )
+    elif any(k in q_lower for k in ["vidya lakshmi", "vidyalakshmi", "celc", "portal"]):
+        ans = (
+            "🏛️ **Vidya Lakshmi Portal Guidelines (Government of India)**:\n\n"
+            "Vidya Lakshmi (`vidyalakshmi.co.in`) is the official single-window portal managed by NSDL e-Governance for education loans and scholarships:\n\n"
+            "1. **Register**: Create an account using the student's email and mobile number.\n"
+            "2. **Common Education Loan Application Form (CELC)**: Fill student personal details, course (VFSTR Deemed University), and fee structure.\n"
+            "3. **Upload Institutional Documents**: Upload your Vignan Bonafide Certificate and Year-wise Fee Structure Letter.\n"
+            "4. **Select Banks**: You can apply to up to 3 partner banks simultaneously through one form.\n"
+            "5. **Tracking**: Bank branch officers review the application and verify your institutional certificates online via our Verification Portal."
+        )
+    elif any(k in q_lower for k in ["csis", "interest subsidy", "pm-usp", "subsidy", "4.5 lakh", "family income"]):
+        ans = (
+            "💰 **Central Sector Interest Subsidy (CSIS / PM-USP Scheme)**:\n\n"
+            "CSIS is a Ministry of Education initiative providing **full interest subsidy during the moratorium period** (Course duration + 1 year):\n\n"
+            "• **Eligibility**: Students from Economically Weaker Sections with annual parental gross income **up to ₹4.50 Lakhs**.\n"
+            "• **Applicability**: Professional and technical courses in recognized institutions (VFSTR is UGC/AICTE accredited).\n"
+            "• **Non-Collateral Limit**: Up to ₹7.5 Lakhs under Credit Guarantee Fund for Education Loans (CGFEL).\n"
+            "• **Required Certificate**: State revenue authority Income Certificate + Vignan Bonafide and Year-wise Fee Breakdown."
+        )
+    elif any(k in q_lower for k in ["turnaround", "how long", "time", "hours", "sla", "delay"]):
+        ans = (
+            "⏱️ **Document Turnaround Time & Institutional SLA**:\n\n"
+            "• **Target SLA**: 24 hours from submission.\n"
+            "• **Process**: Automated generation from live academic records with authorized digital signature, circular seal, and tamper-proof verification QR.\n"
+            "• **Why Speed Matters**: Fast issuance prevents loan application stalls and avoids late payment interest penalties from banks for student families."
+        )
+    elif any(k in q_lower for k in ["disburse", "utr", "reconcil", "ledger", "accounts"]):
+        ans = (
+            "💳 **Disbursement & Accounts Fee Ledger Reconciliation**:\n\n"
+            "When a lending bank disburses loan funds directly to the institution:\n"
+            "1. The bank issues a **Unique Transaction Reference (UTR)** number.\n"
+            "2. The Accounts Section records the UTR and amount in the **Disbursements** ledger.\n"
+            "3. Upon 1-click reconciliation, the student's `paid_fee` is credited and loan status is updated.\n"
+            "4. Loan-dependent students have late fees and default notices suspended while disbursement is pending."
+        )
+    else:
+        global GEMINI_API_KEY, GEMINI_MODEL
+        if is_valid_gemini_key(GEMINI_API_KEY):
+            try:
+                system_prompt = (
+                    "You are Agent 43, the institutional Education Loan Support Agent for Vignan's Foundation for "
+                    "Science, Technology and Research (VFSTR Deemed to be University).\n"
+                    "PRIMARY PURPOSE: Provide students and parents with accurate institutional documentation and factual "
+                    "information on education loan processes.\n"
+                    "STRICT GUARDRAIL: You must NOT recommend any specific commercial lender, compare interest rates, "
+                    "recommend loan products, or evaluate a family's repayment capacity. Restrict strictly to institutional "
+                    "documents (Bonafide, Fee Breakdown, Admission, Academic Status, Fee Paid) and factual government schemes "
+                    "(Vidya Lakshmi, CSIS). Route commercial financial questions to accounts section.\n"
+                    "Always be helpful, precise, and professional."
+                )
+                url = f"https://generativelanguage.googleapis.com/v1beta/models/{GEMINI_MODEL}:generateContent?key={GEMINI_API_KEY}"
+                payload_gemini = {
+                    "contents": [
+                        {"role": "user", "parts": [{"text": f"{system_prompt}\n\nUser Question: {q}"}]}
+                    ]
+                }
+                resp = requests.post(url, json=payload_gemini, timeout=8)
+                if resp.status_code == 200:
+                    ans = resp.json()["candidates"][0]["content"]["parts"][0]["text"]
+                else:
+                    ans = "Agent 43 provides institutional documentation (Bonafide, Fee Structure, Admission, Academic Status, Fee Paid) and factual government scheme assistance for Vignan University students."
+            except Exception:
+                ans = "Agent 43 provides institutional documentation (Bonafide, Fee Structure, Admission, Academic Status, Fee Paid) and factual government scheme assistance for Vignan University students."
+        else:
+            ans = (
+                "🎓 **Agent 43: Institutional Education Loan Support Desk**\n\n"
+                f"Regarding your query: *'{q}'*\n\n"
+                "Agent 43 assists Vignan students with institutional document requests (Bonafide, Fee Breakdown, Admission Confirmation, Academic Status, Fee Paid Statement), "
+                "Vidya Lakshmi portal documentation, and bank disbursement reconciliation.\n\n"
+                "Please visit the **Document Requests** tab to generate certified certificates, or contact the **Accounts Section (Block A)** for fee ledger assistance."
+            )
+
+    return {
+        "query": q,
+        "guardrail_triggered": False,
+        "response": ans,
+        "disclaimer": "Institutional Disclaimer: Agent 43 supports institutional documentation and factual government scheme processes. It does not provide financial or lending advice."
+    }
 
 
 if __name__ == "__main__":

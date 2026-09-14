@@ -31,3 +31,11 @@ Thumbs.db
 mobile/.expo/
 mobile/ios/
 mobile/android/
+
+# Binaries & Runtime uploads
+cloudflared.exe
+*.exe
+backend/verification_uploads/
+backend/generated_documents/
+verification_uploads/
+generated_documents/
