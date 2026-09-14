@@ -1277,7 +1277,15 @@ export default function Home() {
       const turnaroundData = await turnaroundResponse.json();
 
       if (summaryResponse.ok) setReportSummary(summaryData);
-      if (turnaroundResponse.ok) setTurnaroundStats(turnaroundData);
+      if (turnaroundResponse.ok) {
+        if (Array.isArray(turnaroundData)) {
+          setTurnaroundStats(turnaroundData);
+        } else if (turnaroundData && Array.isArray(turnaroundData.by_document_type)) {
+          setTurnaroundStats(turnaroundData.by_document_type);
+        } else {
+          setTurnaroundStats([]);
+        }
+      }
 
     } catch (error) {
       console.error(error);
@@ -3459,7 +3467,7 @@ export default function Home() {
 
         <h2>Average Turnaround Time by Document Type</h2>
 
-        {turnaroundStats.length === 0 ? (
+        {(!Array.isArray(turnaroundStats) || turnaroundStats.length === 0) ? (
           <p className="empty">
             No issued documents yet to calculate turnaround time.
           </p>
@@ -3474,11 +3482,11 @@ export default function Home() {
                 </tr>
               </thead>
               <tbody>
-                {turnaroundStats.map((stat) => (
+                {(Array.isArray(turnaroundStats) ? turnaroundStats : []).map((stat) => (
                   <tr key={stat.document_type}>
                     <td>{stat.document_type}</td>
                     <td>{stat.count}</td>
-                    <td>{stat.average_days} day(s)</td>
+                    <td>{stat.average_days ?? (stat.average_hours ? Math.round((stat.average_hours / 24) * 10) / 10 : 0)} day(s)</td>
                   </tr>
                 ))}
               </tbody>
