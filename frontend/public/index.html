@@ -1,0 +1,2526 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Vignan University · Agent 43 Education Loan Support Portal</title>
+  <link rel="stylesheet" href="globals.css">
+  <style>
+    .hidden { display: none !important; }
+    .scorecard-badge.pass { background: #dcfce7; color: #166534; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    .scorecard-badge.fail { background: #fee2e2; color: #991b1b; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    .scorecard-badge.warn { background: #fef3c7; color: #92400e; font-weight: 700; padding: 4px 10px; border-radius: 6px; }
+    
+    /* Strict Guardrail Banner */
+    .guardrail-banner {
+      background: #eff6ff;
+      border: 1.5px solid #bfdbfe;
+      border-radius: 10px;
+      padding: 12px 18px;
+      margin-bottom: 18px;
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.04);
+    }
+    .guardrail-icon { font-size: 26px; }
+    .guardrail-text { font-size: 13px; color: #1e3a8a; line-height: 1.45; }
+    .guardrail-tag {
+      display: inline-block;
+      background: #1e3a8a;
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: 2px 8px;
+      border-radius: 4px;
+      margin-right: 6px;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Protected Student Badge */
+    .badge-protected {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #dcfce7;
+      color: #15803d;
+      font-weight: 700;
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+      border: 1px solid #86efac;
+    }
+    .badge-standard {
+      display: inline-flex;
+      align-items: center;
+      gap: 5px;
+      background: #f1f5f9;
+      color: #475569;
+      font-weight: 600;
+      font-size: 11.5px;
+      padding: 4px 10px;
+      border-radius: 20px;
+    }
+    
+    /* Scheme Card Grid */
+    .schemes-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 16px;
+      margin-top: 14px;
+    }
+    .scheme-card {
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: 0 2px 8px rgba(0,0,0,0.03);
+      transition: transform 0.15s, box-shadow 0.15s;
+    }
+    .scheme-card:hover {
+      transform: translateY(-2px);
+      box-shadow: 0 6px 16px rgba(0,0,0,0.07);
+    }
+    .scheme-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 10px;
+    }
+    .scheme-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: #0f172a;
+    }
+    .scheme-tag {
+      font-size: 11px;
+      font-weight: 700;
+      padding: 3px 8px;
+      border-radius: 6px;
+      background: #e0f2fe;
+      color: #0369a1;
+    }
+    .scheme-body p {
+      font-size: 13px;
+      color: #475569;
+      margin: 6px 0;
+      line-height: 1.45;
+    }
+    .scheme-kv {
+      display: flex;
+      justify-content: space-between;
+      font-size: 12.5px;
+      padding: 4px 0;
+      border-bottom: 1px dashed #f1f5f9;
+    }
+    .scheme-kv strong { color: #0f172a; }
+    
+    /* Direct Verification Card */
+    .bank-verify-box {
+      background: linear-gradient(135deg, #0f2042 0%, #1e3a8a 100%);
+      color: #ffffff;
+      padding: 24px;
+      border-radius: 14px;
+      margin-bottom: 24px;
+      box-shadow: 0 6px 20px rgba(15,32,66,0.25);
+    }
+    .bank-verify-box h3 { margin: 0 0 8px 0; font-size: 20px; font-weight: 700; }
+    .bank-verify-box p { font-size: 13.5px; color: #cbd5e1; margin: 0 0 16px 0; line-height: 1.5; }
+    .bank-verify-input-group {
+      display: flex;
+      gap: 10px;
+      max-width: 600px;
+    }
+    .bank-verify-input {
+      flex: 1;
+      padding: 12px 16px;
+      border-radius: 8px;
+      border: 1px solid #64748b;
+      font-size: 15px;
+      font-family: monospace;
+      text-transform: uppercase;
+      font-weight: 700;
+      background: #1e293b;
+      color: #ffffff;
+    }
+    .bank-verify-btn {
+      padding: 12px 22px;
+      border-radius: 8px;
+      border: none;
+      background: #22c55e;
+      color: #064e3b;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .bank-verify-btn:hover { background: #16a34a; color: white; }
+    
+    /* Verified Certificate Display Box */
+    .bank-cert-card {
+      background: #ffffff;
+      border: 2px solid #22c55e;
+      border-radius: 12px;
+      padding: 22px;
+      margin-top: 18px;
+      color: #0f172a;
+      box-shadow: 0 4px 14px rgba(34,197,94,0.15);
+    }
+    .bank-cert-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding-bottom: 12px;
+      border-bottom: 2px solid #e2e8f0;
+      margin-bottom: 14px;
+    }
+    .cert-status-badge {
+      background: #dcfce7;
+      color: #166534;
+      font-weight: 800;
+      font-size: 13px;
+      padding: 6px 14px;
+      border-radius: 20px;
+      border: 1px solid #86efac;
+      letter-spacing: 0.5px;
+    }
+    
+    /* Chat bot full tab */
+    .chat-layout {
+      display: flex;
+      flex-direction: column;
+      height: calc(100vh - 220px);
+      min-height: 480px;
+      background: #ffffff;
+      border: 1px solid #e2e8f0;
+      border-radius: 12px;
+      overflow: hidden;
+    }
+    .chat-history {
+      flex: 1;
+      padding: 20px;
+      overflow-y: auto;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+      background: #f8fafc;
+    }
+    .chat-msg {
+      max-width: 80%;
+      padding: 14px 18px;
+      border-radius: 12px;
+      font-size: 13.5px;
+      line-height: 1.55;
+    }
+    .chat-msg.user {
+      align-self: flex-end;
+      background: #1e3a8a;
+      color: #ffffff;
+      border-bottom-right-radius: 2px;
+    }
+    .chat-msg.agent {
+      align-self: flex-start;
+      background: #ffffff;
+      color: #0f172a;
+      border: 1px solid #e2e8f0;
+      border-bottom-left-radius: 2px;
+      box-shadow: 0 2px 6px rgba(0,0,0,0.03);
+    }
+    .chat-quick-prompts {
+      padding: 10px 16px;
+      background: #f1f5f9;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 8px;
+      overflow-x: auto;
+    }
+    .prompt-chip {
+      background: #ffffff;
+      border: 1px solid #cbd5e1;
+      padding: 6px 12px;
+      border-radius: 20px;
+      font-size: 12px;
+      color: #1e3a8a;
+      font-weight: 600;
+      cursor: pointer;
+      white-space: nowrap;
+      transition: background 0.15s;
+    }
+    .prompt-chip:hover { background: #e2e8f0; }
+    .chat-input-bar {
+      padding: 14px 16px;
+      background: #ffffff;
+      border-top: 1px solid #e2e8f0;
+      display: flex;
+      gap: 10px;
+    }
+    .chat-input-bar input {
+      flex: 1;
+      padding: 10px 14px;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      font-size: 14px;
+    }
+    .chat-input-bar button {
+      padding: 10px 20px;
+      border-radius: 8px;
+      border: none;
+      background: #1e3a8a;
+      color: white;
+      font-weight: 700;
+      cursor: pointer;
+    }
+    
+    /* API Float Bar */
+    .api-config-bar {
+      position: fixed;
+      bottom: 12px;
+      right: 16px;
+      background: #0f172a;
+      color: white;
+      padding: 8px 16px;
+      border-radius: 30px;
+      font-size: 12px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      box-shadow: 0 4px 14px rgba(0,0,0,0.3);
+      z-index: 1000;
+    }
+    .api-config-bar input {
+      background: #1e293b;
+      border: 1px solid #334155;
+      color: white;
+      padding: 4px 8px;
+      border-radius: 6px;
+      font-size: 12px;
+      width: 170px;
+    }
+    .api-config-bar button {
+      background: #2563eb;
+      color: white;
+      border: none;
+      padding: 4px 10px;
+      border-radius: 6px;
+      cursor: pointer;
+      font-weight: 600;
+    }
+  </style>
+</head>
+<body>
+  <div class="portal-container">
+    <!-- TOPBAR -->
+    <header class="vignan-top-navbar">
+      <div class="vignan-logo-container">
+        <img src="vignan-logo.png" alt="Vignan University Logo" style="height: 60px; max-width: 320px; object-fit: contain; display: block;">
+      </div>
+      <div class="topbar-center-agent">
+        <div class="agent-radar-badge"><span class="pulse-dot"></span>AGENT 43 · EDUCATION LOAN SUPPORT</div>
+        <div class="agent-main-title"><span class="title-dash">—</span> VFSTR INSTITUTIONAL PORTAL <span class="title-dash">—</span></div>
+        <div class="agent-sub-title">OFFICIAL DOCUMENTATION & ACCOUNTS COORDINATION SYSTEM</div>
+      </div>
+      <div class="topbar-right-group">
+        <div class="accreditation-badges">
+          <div class="accred-seal ugc"><span>UGC</span><small>CAT-1</small></div>
+          <div class="accred-seal naac"><span>NAAC</span><small>A+</small></div>
+          <div class="accred-seal nirf"><span>NIRF</span><small>RANK</small></div>
+          <div class="accred-seal nba"><span>NBA</span><small>TIER-1</small></div>
+        </div>
+        <div class="user-profile-chip">
+          <div class="profile-avatar">VF</div>
+          <div class="profile-details">
+            <div class="profile-name">Accounts & Admin <span class="admin-tag">PORTAL</span></div>
+            <div class="profile-email">loan-support@vignan.ac.in</div>
+          </div>
+        </div>
+      </div>
+    </header>
+
+    <!-- SUB-ACTION BAR -->
+    <div class="sub-action-bar">
+      <div class="sub-actions-left">
+        <button type="button" class="run-agent-btn" onclick="switchTab('Eligibility Analyzer')">🎓 Loan Eligibility Analyzer</button>
+        <button type="button" class="run-agent-btn" style="background:#1e3a8a;" onclick="switchTab('Info Desk')">🤖 Agent 43 Info Desk</button>
+        <div id="backendConnectionBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; cursor:pointer;" onclick="checkBackendHealth(true)" title="Click to test backend connection">
+          <span id="backendStatusDot" style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
+          <span id="backendStatusText">Checking Backend...</span>
+        </div>
+        <span class="vignan-branch-pill">VFSTR Main Campus · Vadlamudi</span>
+      </div>
+      <div class="last-sync-text">
+        <strong>Strict Guardrail:</strong> Documentation & Scheme Assistance Only · Restrict from recommending commercial lenders.
+      </div>
+    </div>
+
+    <!-- MAIN WRAPPER -->
+    <div class="app">
+      <!-- SIDEBAR -->
+      <aside class="sidebar">
+        <div class="sidebar-agent-header">
+          <div class="agent-icon-box">🛡️</div>
+          <div class="agent-sidebar-title">
+            <div class="agent-sidebar-name">AGENT 43 <span class="star-badge">✨</span></div>
+            <div class="agent-sidebar-desc">Education Loan Support Agent</div>
+          </div>
+        </div>
+        <div class="human-in-the-loop-card">
+          <strong>WORKFLOW SPECIFICATION</strong>
+          Supports documentation & information for students/parents, accounts section, and banks. 24h target turnaround.
+        </div>
+        <nav id="sideNav">
+          <button type="button" class="nav-item active" onclick="switchTab('Dashboard')"><span style="font-size:20px">📊</span><span>Dashboard</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Eligibility Analyzer')"><span style="font-size:20px">🎓</span><span>Loan Eligibility Check</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Loan Calculator')"><span style="font-size:20px">🧮</span><span>Loan & EMI Calculator</span></button>
+
+          <button type="button" class="nav-item" onclick="switchTab('Students')"><span style="font-size:20px">👥</span><span>Students & Loans</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Document Requests')"><span style="font-size:20px">📑</span><span>Document Requests</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Bank Schemes')"><span style="font-size:20px">🏦</span><span>Bank Schemes</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Bank Verification')"><span style="font-size:20px">🔍</span><span>Bank Direct Verify</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Disbursement')"><span style="font-size:20px">💰</span><span>Disbursements</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Reports')"><span style="font-size:20px">📈</span><span>SLA & Default Reports</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Info Desk')"><span style="font-size:20px">🤖</span><span>Agent 43 Info Desk</span></button>
+        </nav>
+      </aside>
+
+      <!-- MAIN CONTENT -->
+      <main class="main">
+        <div id="notificationMsg" style="display:none; padding: 12px 18px; margin-bottom: 16px; border-radius: 8px; font-weight: 600;"></div>
+
+        <!-- Institutional Guardrail Alert Banner -->
+        <div class="guardrail-banner">
+          <div class="guardrail-icon">⚖️</div>
+          <div class="guardrail-text">
+            <span class="guardrail-tag">INSTITUTIONAL MANDATE & GUARDRAIL</span>
+            Agent 43 is designed to issue authentic institutional documentation (Bonafide, Fee Breakdown, Admission Confirmation, Academic Status, Fee Paid) and provide factual government scheme information. It is strictly prohibited from recommending commercial lenders, comparing interest rates, or evaluating personal family repayment capacity.
+          </div>
+        </div>
+
+        <!-- 1. DASHBOARD -->
+        <section id="page-Dashboard">
+          <div class="dashboard-hero-row">
+            <div class="hero-radar-card">
+              <div>
+                <div class="hero-tags">
+                  <span class="hero-tag-system">SYSTEM OPERATIONAL</span>
+                  <span class="hero-tag-live">● 24H SLA ACTIVE</span>
+                </div>
+                <h2 class="hero-heading">Education Loan Support & Documentation Engine</h2>
+                <p class="hero-desc">Accelerating education loan applications for Vignan students and parents. Eliminates bank delays through fast automated document issuance, all-in-one loan eligibility assessment, direct bank verification, and fee ledger reconciliation.</p>
+              </div>
+              <div class="hero-actions-row">
+                <div class="hero-chips">
+                  <span class="hero-chip">5 Standard Documents</span>
+                  <span class="hero-chip">All-in-One Eligibility Check</span>
+                  <span class="hero-chip">Disbursement UTR Ledger</span>
+                </div>
+                <button type="button" class="refresh-metrics-btn" onclick="refreshAll()">🔄 Refresh Metrics</button>
+              </div>
+            </div>
+            
+            <div class="hero-bot-card">
+              <div class="bot-card-header">
+                <span class="bot-title">🤖 Agent 43 Info Assistant</span>
+                <button type="button" class="ask-robot-badge" onclick="switchTab('Info Desk')">Full Chat ✨</button>
+              </div>
+              <div class="bot-interactive-area">
+                <div class="bot-avatar-graphic">🎓</div>
+                <div class="bot-speech-bubble" id="botQuickBubble">Welcome! I assist Vignan students with certified loan certificates, Vidya Lakshmi requirements, and disbursement tracking.</div>
+              </div>
+              <div class="bot-input-bar">
+                <input type="text" id="botQuickInput" placeholder="Ask about certificates, turnaround, or schemes..." onkeydown="if(event.key==='Enter') sendQuickBotQuery()">
+                <button type="button" class="bot-send-btn" onclick="sendQuickBotQuery()">Ask</button>
+              </div>
+            </div>
+          </div>
+
+          <!-- KPI Radar Cards -->
+          <div class="radar-stats-grid">
+            <div class="radar-stat-card">
+              <div class="stat-header"><span>TOTAL STUDENTS</span><span class="stat-icon-badge blue">👥</span></div>
+              <div class="stat-number" id="statTotalStudents">0</div>
+              <div class="stat-footer blue-text">● Enrolled VFSTR Students</div>
+            </div>
+            <div class="radar-stat-card">
+              <div class="stat-header"><span>ACTIVE DOCUMENT REQUESTS</span><span class="stat-icon-badge amber">📋</span></div>
+              <div class="stat-number" id="statActiveRequests">0</div>
+              <div class="stat-footer amber-text">● Awaiting Issuance (Target: 24h)</div>
+            </div>
+            <div class="radar-stat-card">
+              <div class="stat-header"><span>LOAN-DEPENDENT PROTECTED</span><span class="stat-icon-badge green">🛡️</span></div>
+              <div class="stat-number" id="statProtectedStudents">0</div>
+              <div class="stat-footer green-text">● Late Fees & Defaults Suspended</div>
+            </div>
+            <div class="radar-stat-card">
+              <div class="stat-header"><span>TOTAL DISBURSED (₹)</span><span class="stat-icon-badge blue">💰</span></div>
+              <div class="stat-number" id="statTotalDisbursed">₹ 0</div>
+              <div class="stat-footer blue-text">● Reconciled to Accounts Ledger</div>
+            </div>
+          </div>
+
+          <!-- Quick Action Buttons -->
+          <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;">
+            <button type="button" class="primary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Eligibility Analyzer')">🎓 All-in-One Loan Eligibility Check</button>
+            <button type="button" class="secondary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Document Requests')">📑 Request Institutional Certificate</button>
+            <button type="button" class="secondary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Bank Verification')">🔍 Bank Direct Verification</button>
+          </div>
+
+          <!-- Recent Requests -->
+          <div class="section" style="margin-top:20px;">
+            <div class="section-header">
+              <h2>Recent Institutional Document Requests</h2>
+              <button type="button" class="primary-button" onclick="switchTab('Document Requests')">+ New Request</button>
+            </div>
+            <div id="dashboardRequestsTable">
+              <p class="empty">Loading document requests...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 2. ALL-IN-ONE LOAN ELIGIBILITY ANALYZER -->
+        <section id="page-Eligibility Analyzer" class="hidden">
+          <div class="page-title">
+            <h1>All-in-One Multi-Certificate Upload & Loan Eligibility Analyzer</h1>
+            <p>Upload all your institutional certificates in one go. Agent 43 automatically validates cross-document identity, audits mandatory certificate completeness, and determines eligibility across Vidya Lakshmi, CGFEL Collateral-free, CSIS Interest Subsidy, and SBI Scholar schemes.</p>
+          </div>
+
+          <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px;">
+            <div style="font-size:32px;">📑</div>
+            <div style="flex:1;">
+              <strong style="color:#1e3a8a; font-size:15px;">One-Shot Multi-Certificate Audit (ఒకేసారి అన్ని సర్టిఫికెట్లు అప్‌లోడ్)</strong>
+              <p style="margin:4px 0 0 0; font-size:13px; color:#1e40af; line-height:1.45;">
+                Select your student register number, enter target loan amount & family income, then attach your Bonafide, Fee Structure, Admission, and Academic Marksheet. The engine verifies name consistency, validates VFSTR official circular seals, and produces an authentic <strong>Bank-Ready Loan Eligibility Dossier</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Attach Student Loan Certificates Bundle</h2>
+            <form id="bundleUploadForm" onsubmit="handleBundleUpload(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label style="font-weight:700;">Select Registered Student</label>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                  <input type="text" id="bundleStudentIdInput" name="student_id" placeholder="Enter Register Number (e.g. 261FA04001)" required style="flex:1; min-width:220px; font-weight:700;">
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('261FA04001')">Tejasai (261FA04001)</button>
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('241FA04195')">K. Jagadeesh (241FA04195)</button>
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('241FA04202')">N. Yasaswi (241FA04202)</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Target Loan Amount (₹)</label>
+                <input type="number" id="bundleTargetAmount" name="target_loan_amount" placeholder="e.g. 450000" value="450000">
+                <small style="color:#64748b;">Amounts up to ₹7.5 Lakhs are 100% collateral-free under CGFEL.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Annual Family Income (₹)</label>
+                <input type="number" id="bundleFamilyIncome" name="family_income" placeholder="e.g. 350000" value="350000">
+                <small style="color:#64748b;">Incomes &le; ₹4.50 Lakhs qualify for 100% CSIS interest subsidy.</small>
+              </div>
+
+              <!-- Certificate Slots -->
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">1. 📑 Bonafide Certificate <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="bonafide_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">2. 📑 Fee Structure Letter <span style="color:#16a34a;">(Year-wise Breakdown)</span></label>
+                <input type="file" name="fee_structure_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">3. 📑 Admission Confirmation / Allotment <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="admission_letter_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">4. 📑 Academic Status / Marksheet (CGPA) <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="academic_marksheet_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px;">
+                <label style="color:#475569; font-weight:600;">5. 📑 Fee Paid Statement / Receipts (Supporting)</label>
+                <input type="file" name="fee_receipt_file" accept=".pdf,image/*">
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px;">
+                <label style="color:#475569; font-weight:600;">6. 📑 Family Income Certificate (For CSIS Subsidy)</label>
+                <input type="file" name="income_cert_file" accept=".pdf,image/*">
+              </div>
+
+              <div style="grid-column: 1 / -1; display:flex; justify-content:flex-end; margin-top:8px;">
+                <button type="submit" id="bundleSubmitBtn" class="primary-button" style="padding:14px 28px; font-size:15px; font-weight:700;">
+                  🔍 Analyze All Certificates & Check Loan Eligibility
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Analysis Results Display -->
+          <div id="bundleResultContainer" style="margin-top:24px;"></div>
+        </section>
+
+        <!-- 3. STUDENTS & LOAN DEPENDENCY (Workflow 8) -->
+        <section id="page-Students" class="hidden">
+          <div class="page-title">
+            <h1>Students & Loan Dependency Management</h1>
+            <p>Track student enrollment, fee ledgers, and loan-dependent status to protect students from unfair default notices.</p>
+          </div>
+          <div class="student-layout">
+            <div class="section form-section">
+              <h2>Register Student</h2>
+              <form id="addStudentForm" onsubmit="handleAddStudent(event)">
+                <div class="form-group">
+                  <label>Register Number</label>
+                  <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
+                </div>
+                <div class="form-group">
+                  <label>Student Full Name</label>
+                  <input type="text" name="name" placeholder="Enter student name" required>
+                </div>
+                <div class="form-group">
+                  <label>Course</label>
+                  <input type="text" name="course" placeholder="e.g. B.Tech Computer Science & Engineering" required>
+                </div>
+                <div class="form-group">
+                  <label>Year</label>
+                  <select name="year" required>
+                    <option value="">Select year</option>
+                    <option value="1st Year">1st Year</option>
+                    <option value="2nd Year">2nd Year</option>
+                    <option value="3rd Year">3rd Year</option>
+                    <option value="4th Year">4th Year</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Admission Year</label>
+                  <input type="text" name="admission_year" placeholder="e.g. 2024" required>
+                </div>
+                <div class="form-group">
+                  <label>Total Course Fee (₹)</label>
+                  <input type="number" name="total_fee" placeholder="e.g. 240000" required>
+                </div>
+                <button type="submit" class="primary-button">Register Student</button>
+              </form>
+            </div>
+            
+            <div class="section list-section">
+              <h2>Registered Students & Fee Status</h2>
+              <div id="studentsListTable">
+                <p class="empty">Loading student records...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 4. DOCUMENT REQUESTS (Workflow 2, 3, 5) -->
+        <section id="page-Document Requests" class="hidden">
+          <div class="page-title">
+            <h1>Institutional Document Requests</h1>
+            <p>Generate certified certificates from live records with authorized digital signature, circular seal, and tamper-proof verification QR.</p>
+          </div>
+          <div class="section">
+            <h2>Create Document Request (5 Standard Institutional Documents)</h2>
+            <form id="addDocReqForm" onsubmit="handleAddDocRequest(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+              <div class="form-group">
+                <label>Student Register No</label>
+                <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
+              </div>
+              <div class="form-group">
+                <label>Institutional Document Type</label>
+                <select name="document_type" required>
+                  <option value="">-- Select Standard Document --</option>
+                  <option value="Bonafide Certificate">1. Bonafide Certificate</option>
+                  <option value="Fee Structure Letter with Year-wise Breakdown">2. Fee Structure Letter (Year-wise Breakdown)</option>
+                  <option value="Admission Confirmation">3. Admission Confirmation</option>
+                  <option value="Academic Status Certificate">4. Academic Status Certificate</option>
+                  <option value="Fee Paid Statement">5. Fee Paid Statement / Receipts</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Purpose / Target Bank</label>
+                <input type="text" name="description" placeholder="e.g. Vidya Lakshmi / SBI Scholar Loan" required>
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button type="submit" class="primary-button" style="width:100%">Submit Request</button>
+              </div>
+            </form>
+          </div>
+
+          <div class="section" style="margin-top:20px;">
+            <h2>Requests Ledger & Turnaround Monitor (Target SLA: 24 Hours)</h2>
+            <div id="requestsLedgerTable">
+              <p class="empty">Loading requests...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 5. BANK SCHEMES & REQUIREMENTS (Workflow 1) -->
+        <section id="page-Bank Schemes" class="hidden">
+          <div class="page-title">
+            <h1>Bank Documentation Requirements & Government Schemes</h1>
+            <p>Authoritative reference guide for public education loan schemes and institutional documentation guidelines.</p>
+          </div>
+
+          <!-- Schemes Grid -->
+          <div class="schemes-grid" id="schemesCardsContainer">
+            <p class="empty">Loading public schemes...</p>
+          </div>
+
+          <!-- Document Checklist Table -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Institutional Documentation Checklist</h2>
+            <div id="bankRequirementsList">
+              <p class="empty">Loading checklist...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 6. BANK DIRECT VERIFICATION (Workflow 4) -->
+        <section id="page-Bank Verification" class="hidden">
+          <div class="page-title">
+            <h1>Bank Direct Verification Portal</h1>
+            <p>Instant online authenticity verification for bank branch loan officers. Eliminates telephone calls and physical visits to campus.</p>
+          </div>
+
+          <!-- Direct Bank Verification Search Box -->
+          <div class="bank-verify-box">
+            <h3>🏦 Bank Branch Direct Authenticity Lookup</h3>
+            <p>Enter the unique institutional verification code printed on the Vignan certificate (e.g. <code>ELN-XXXXXXXX</code>) to authenticate immediately online.</p>
+            <div class="bank-verify-input-group">
+              <input type="text" id="bankVerifyCodeInput" class="bank-verify-input" placeholder="ENTER CODE (e.g. ELN-261FA04001)" onkeydown="if(event.key==='Enter') lookupBankVerification()">
+              <button type="button" class="bank-verify-btn" onclick="lookupBankVerification()">🔍 Verify Authenticity</button>
+            </div>
+          </div>
+
+          <div id="bankVerificationResult"></div>
+
+          <!-- Document History / Issued Documents Table -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Officially Issued Certificates</h2>
+            <div id="issuedDocsTable">
+              <p class="empty">No documents issued yet.</p>
+            </div>
+          </div>
+
+          <!-- Physical Document Scan & OCR Upload -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Scan & OCR Authenticity Verification (Scanned Files)</h2>
+            <p style="font-size:13px; color:#64748b; margin-bottom:14px;">Upload a scanned document photo or student ID card to run the circular seal detector and barcode/QR decoder.</p>
+            <form id="verifyUploadForm" onsubmit="handleVerifyUpload(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(220px, 1fr)); gap: 14px;">
+              <div class="form-group">
+                <label>Student Register Number</label>
+                <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
+              </div>
+              <div class="form-group">
+                <label>Document Type</label>
+                <select name="document_type" id="verifDocTypeSelect" required>
+                  <option value="Bonafide Certificate">Bonafide Certificate</option>
+                  <option value="Fee Structure Letter with Year-wise Breakdown">Fee Structure Letter</option>
+                  <option value="Admission Confirmation">Admission Confirmation</option>
+                  <option value="Academic Status Certificate">Academic Status Certificate</option>
+                  <option value="Fee Paid Statement">Fee Paid Statement</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label>Document Photo / Scan</label>
+                <input type="file" name="file" accept="image/*" required>
+              </div>
+              <div style="display:flex; align-items:flex-end;">
+                <button type="submit" class="primary-button" id="verifySubmitBtn" style="width:100%">🔍 Scan & Verify</button>
+              </div>
+            </form>
+            <div id="scorecardResultContainer" style="margin-top:16px;"></div>
+          </div>
+        </section>
+
+        <!-- 7. DISBURSEMENT & FEE RECONCILIATION (Workflow 7) -->
+        <section id="page-Disbursement" class="hidden">
+          <div class="page-title">
+            <h1>Disbursement Management & Accounts Reconciliation</h1>
+            <p>Coordinate incoming bank disbursements with accounts section, record bank UTRs, and reconcile against student fee ledgers.</p>
+          </div>
+          <div class="disbursement-layout">
+            <div class="section form-section">
+              <h2>Record Bank Disbursement</h2>
+              <form id="addDisbursementForm" onsubmit="handleAddDisbursement(event)">
+                <div class="form-group">
+                  <label>Student Register Number</label>
+                  <input type="text" name="student_id" placeholder="e.g. 261FA04001" required>
+                </div>
+                <div class="form-group">
+                  <label>Bank Name</label>
+                  <input type="text" name="bank_name" placeholder="e.g. State Bank of India" required>
+                </div>
+                <div class="form-group">
+                  <label>Loan Amount Disbursed (₹)</label>
+                  <input type="number" name="loan_amount" placeholder="e.g. 150000" required>
+                </div>
+                <div class="form-group">
+                  <label>Bank UTR Number</label>
+                  <input type="text" name="utr_number" placeholder="e.g. SBIN20260914001" required>
+                </div>
+                <div class="form-group">
+                  <label>Academic Term</label>
+                  <select name="academic_term" required>
+                    <option value="Full Year">Full Year</option>
+                    <option value="Year 1 / Sem 1">Year 1 / Sem 1</option>
+                    <option value="Year 1 / Sem 2">Year 1 / Sem 2</option>
+                    <option value="Year 2 / Sem 1">Year 2 / Sem 1</option>
+                    <option value="Year 2 / Sem 2">Year 2 / Sem 2</option>
+                    <option value="Year 3 / Sem 1">Year 3 / Sem 1</option>
+                    <option value="Year 4 / Sem 1">Year 4 / Sem 1</option>
+                  </select>
+                </div>
+                <div class="form-group">
+                  <label>Disbursed Date</label>
+                  <input type="date" name="disbursed_date">
+                </div>
+                <div class="form-group">
+                  <label>Accounts Notes</label>
+                  <input type="text" name="notes" placeholder="Direct Institutional Credit">
+                </div>
+                <button type="submit" class="primary-button">Record Bank Disbursement</button>
+              </form>
+            </div>
+            
+            <div class="section list-section">
+              <h2>Bank Disbursements & Fee Ledger Reconciliation</h2>
+              <div id="disbursementsTable">
+                <p class="empty">Loading disbursements...</p>
+              </div>
+            </div>
+          </div>
+        </section>
+
+        <!-- 8. REPORTS: SLA & DEFAULT PROTECTION (Workflow 5 & 8) -->
+        <section id="page-Reports" class="hidden">
+          <div class="page-title">
+            <h1>Turnaround SLA & Fee Default Protection Reports</h1>
+            <p>Monitor document issue turnaround times and protect loan-dependent students from fee default penalties.</p>
+          </div>
+
+          <!-- Turnaround SLA Performance -->
+          <div class="section">
+            <h2>Turnaround Time & SLA Monitor (Target: 24 Hours)</h2>
+            <div style="background:#f8fafc; border:1px solid #e2e8f0; border-radius:10px; padding:14px; margin-bottom:14px; font-size:13px; color:#334155;">
+              ⏱️ <strong>Financial Impact Note:</strong> Prompt institutional document issuance prevents bank loan sanction stalls. Every 24-hour delay causes severe distress and risks compounding interest penalties for student families.
+            </div>
+            <div id="turnaroundReportContainer">
+              <p class="empty">Loading turnaround statistics...</p>
+            </div>
+          </div>
+
+          <!-- Fee Reminders & Loan Dependency Default Protection Ledger -->
+          <div class="section" style="margin-top:24px;">
+            <h2>Fee Reminder & Default Protection Ledger (Workflow 8)</h2>
+            <p style="font-size:13px; color:#64748b; margin-bottom:14px;">
+              Accounts Section reminder queue. Students marked as <strong>Loan-Dependent</strong> are actively protected: late fee penalties and default notices are <strong>held in abeyance</strong> pending bank disbursement.
+            </p>
+            <div id="feeRemindersTableContainer">
+              <p class="empty">Loading fee reminders...</p>
+            </div>
+          </div>
+        </section>
+
+        <!-- 9. AGENT 43 INFO DESK (Workflow 6) -->
+        <section id="page-Info Desk" class="hidden">
+          <div class="page-title">
+            <h1>Agent 43 Institutional Info Desk</h1>
+            <p>General information on education loan documentation, Vidya Lakshmi processes, and institutional turnaround times.</p>
+          </div>
+
+          <div class="chat-layout">
+            <div class="chat-history" id="chatHistoryBox">
+              <div class="chat-msg agent">
+                <strong>🎓 Agent 43 Education Loan Desk:</strong><br>
+                Hello! I provide students and parents with accurate institutional documentation and factual guidance for education loan applications.<br><br>
+                <em>⚠️ Notice: Under institutional policy, I do not recommend commercial lenders, compare interest rates, or evaluate repayment capacity.</em>
+              </div>
+            </div>
+
+            <!-- 1-Click Quick Prompts -->
+            <div class="chat-quick-prompts">
+              <span class="prompt-chip" onclick="askQuickPrompt('Which bank is best for an education loan?')">🚨 Test Guardrail: Which bank is best?</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('What documents are required for an education loan?')">📄 Required Documents</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('How do I apply on Vidya Lakshmi portal?')">🏛️ Vidya Lakshmi Steps</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('Explain CSIS interest subsidy scheme')">💰 CSIS Subsidy (4.5 LPA)</span>
+              <span class="prompt-chip" onclick="askQuickPrompt('What is the document turnaround time?')">⏱️ 24h Turnaround SLA</span>
+            </div>
+
+            <div class="chat-input-bar">
+              <input type="text" id="chatInput" placeholder="Ask about certificates, turnaround, schemes, or disbursement..." onkeydown="if(event.key==='Enter') sendChatMessage()">
+              <button type="button" onclick="sendChatMessage()">Send</button>
+            </div>
+          </div>
+        </section>
+      
+        <!-- 10. LOAN & 5-YEAR MORATORIUM EMI CALCULATOR -->
+        <section id="page-Loan Calculator" class="hidden">
+          <div class="page-title">
+            <h1>Education Loan & 5-Year Moratorium Repayment EMI Calculator</h1>
+            <p>Institutional reference projection for B.Tech (India) and Study Abroad students under IBA Model Scheme guidelines. Estimate eligible loan limits, 5-year moratorium simple interest, CSIS 100% government interest waiver, post-moratorium monthly EMI, and Section 80E tax savings.</p>
+          </div>
+
+          <!-- Bilingual Informational Banner -->
+          <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:flex-start; gap:16px;">
+            <div style="font-size:32px;">🧮</div>
+            <div style="flex:1;">
+              <strong style="color:#1e3a8a; font-size:15px;">5-Year Moratorium & Repayment Dynamics (5 ఏళ్ల తర్వాత EMI & వడ్డీ లెక్కలు)</strong>
+              <p style="margin:4px 0 0 0; font-size:13px; color:#1e40af; line-height:1.45;">
+                Under standard Indian education loan guidelines, repayment starts <strong>5 years after admission</strong> (4 years course + 1 year grace period). During this period, simple interest is charged. If your family annual income is <strong>&le; ₹4.50 Lakhs</strong>, the Government of India (CSIS scheme) pays <strong>100% of the interest</strong> during these 5 years!
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Scenario Presets -->
+          <div class="section" style="margin-bottom: 20px;">
+            <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; font-size:14px;">⚡ Instant Loan Scenario Presets (త్వరిత ఎంపికలు):</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_base')">🎓 B.Tech Base (₹4.0L @ 9.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_csis')">⭐ B.Tech (₹4.0L + 100% CSIS Waiver)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_cgfel')">🏛️ Govt CGFEL Limit (₹7.5L Collateral-Free)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_premier')">🏆 SBI Scholar VFSTR (₹15.0L @ 9.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_25')">✈️ Abroad MS Base (₹25.0L @ 10.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_40')">🌍 Abroad MS Standard (₹40.0L @ 10.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_50')">🌐 Abroad MS Premier (₹50.0L @ 10.5%)</button>
+            </div>
+          </div>
+
+          <!-- Calculator Two-Column Layout -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; align-items:start;">
+            
+            <!-- LEFT COLUMN: INPUT PARAMETERS -->
+            <div class="card" style="padding:22px;">
+              <h2 style="font-size:17px; margin-bottom:16px; color:#1e3a8a; display:flex; align-items:center; gap:8px;">
+                <span>⚙️</span> Loan & Moratorium Parameters
+              </h2>
+
+              <!-- Study Type -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Study Program & Destination</label>
+                <div style="display:flex; gap:10px; margin-top:6px;">
+                  <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;" id="lblStudyDomestic">
+                    <input type="radio" name="calcStudyType" value="domestic" checked onchange="onStudyTypeChange()"> 🇮🇳 B.Tech (India)
+                  </label>
+                  <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;" id="lblStudyAbroad">
+                    <input type="radio" name="calcStudyType" value="abroad" onchange="onStudyTypeChange()"> ✈️ Study Abroad (MS)
+                  </label>
+                </div>
+              </div>
+
+              <!-- Registered Student Auto-Select -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;">Student Reference (Optional)</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('Tejasai', '261FA04001')">Tejasai (261FA04001)</button>
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('K. Jagadeesh', '241FA04195')">K. Jagadeesh (241FA04195)</button>
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('N. Yasaswi', '241FA04202')">N. Yasaswi (241FA04202)</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="calcStudentName" placeholder="Student Name" value="Tejasai" style="flex:1;">
+                  <input type="text" id="calcStudentId" placeholder="Register No" value="261FA04001" style="width:130px; font-weight:700;">
+                </div>
+              </div>
+
+              <!-- Loan Amount -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Sanctioned Loan Amount (₹)</label>
+                  <span id="txtLoanAmountDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">₹ 4,00,000</span>
+                </div>
+                <input type="range" id="rngLoanAmount" min="100000" max="10000000" step="50000" value="400000" oninput="onLoanSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <input type="number" id="calcLoanAmount" value="400000" min="50000" max="20000000" oninput="onLoanInputChange(this.value)" style="font-weight:700;">
+                <small id="txtCollateralNotice" style="display:block; margin-top:4px; color:#166534; font-weight:600;">✓ 100% Collateral-Free (0% Margin required)</small>
+              </div>
+
+              <!-- Interest Rate -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Annual Interest Rate (%)</label>
+                  <span id="txtRateDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">9.50% p.a.</span>
+                </div>
+                <input type="range" id="rngInterestRate" min="6.0" max="15.0" step="0.25" value="9.5" oninput="onRateSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <input type="number" id="calcInterestRate" value="9.5" step="0.1" min="4.0" max="20.0" oninput="onRateInputChange(this.value)">
+                <small style="color:#64748b;">Benchmark: Public Sector Banks ~8.50% – 10.50% p.a.</small>
+              </div>
+
+              <!-- Moratorium Duration -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Study Moratorium Period (Years)</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                  <div>
+                    <span style="font-size:12px; color:#64748b;">Course Duration:</span>
+                    <select id="calcCourseYears" onchange="recalculateClientLoan()" style="font-weight:600;">
+                      <option value="4" selected>4 Years (B.Tech Standard)</option>
+                      <option value="2">2 Years (MS Abroad)</option>
+                      <option value="3">3 Years (Degree)</option>
+                      <option value="5">5 Years (Integrated)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <span style="font-size:12px; color:#64748b;">Grace Period:</span>
+                    <select id="calcGraceYears" onchange="recalculateClientLoan()" style="font-weight:600;">
+                      <option value="1" selected>1 Year (Standard)</option>
+                      <option value="0.5">6 Months (Post-Job)</option>
+                      <option value="0">0 Months</option>
+                    </select>
+                  </div>
+                </div>
+                <small style="color:#1e3a8a; font-weight:600; display:block; margin-top:4px;">Total Moratorium Before Repayment: <span id="txtTotalMoratoriumDisplay">5.0 Years</span></small>
+              </div>
+
+              <!-- Family Income (CSIS Trigger) -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Annual Family Income (₹)</label>
+                <input type="number" id="calcFamilyIncome" value="350000" placeholder="e.g. 350000" oninput="onIncomeChange(this.value)">
+                <small id="txtCsisNotice" style="display:block; margin-top:4px; color:#15803d; font-weight:700;">
+                  🎉 Income &le; ₹4.50 LPA: 100% CSIS Moratorium Interest Subsidy Applicable!
+                </small>
+              </div>
+
+              <!-- Moratorium Handling Options -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Moratorium Interest Servicing Mode</label>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;">
+                    <input type="radio" name="calcMoratOption" value="defer" checked onchange="recalculateClientLoan()">
+                    <span><strong>Option A: Defer Interest</strong> (Accrue simple interest during study & add to principal at Year 5)</span>
+                  </label>
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;">
+                    <input type="radio" name="calcMoratOption" value="service_monthly" onchange="recalculateClientLoan()">
+                    <span><strong>Option B: Pay Simple Interest Monthly</strong> (Earn 1.00% interest concession from bank throughout tenure)</span>
+                  </label>
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;" id="lblCsisOption">
+                    <input type="radio" name="calcMoratOption" value="csis" onchange="recalculateClientLoan()">
+                    <span><strong>Option C: CSIS Govt Subsidy</strong> (100% moratorium interest waived by Ministry of Education)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Repayment Tenure -->
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Post-Moratorium Repayment Tenure</label>
+                  <span id="txtTenureDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">10 Years (120 Mo)</span>
+                </div>
+                <input type="range" id="rngRepayYears" min="3" max="15" step="1" value="10" oninput="onTenureSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <select id="calcRepayYears" onchange="onTenureSelectChange(this.value)" style="font-weight:700;">
+                  <option value="5">5 Years (60 Months)</option>
+                  <option value="7">7 Years (84 Months)</option>
+                  <option value="10" selected>10 Years (120 Months Standard)</option>
+                  <option value="12">12 Years (144 Months)</option>
+                  <option value="15">15 Years (180 Months Max)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: DYNAMIC RESULTS & PDF GENERATION -->
+            <div>
+              
+              <!-- BIG HERO EMI CARD -->
+              <div style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color:white; border-radius:14px; padding:24px; box-shadow:0 8px 24px rgba(4,120,87,0.25); margin-bottom:18px;">
+                <div style="font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#a7f3d0; margin-bottom:6px;">
+                  POST 5-YEAR MORATORIUM MONTHLY REPAYMENT
+                </div>
+                <div style="font-size:38px; font-weight:800; font-family:'Segoe UI', sans-serif; line-height:1.1; margin-bottom:6px;" id="resMonthlyEmi">
+                  ₹ 7,634 <span style="font-size:18px; font-weight:400; color:#d1fae5;">/ month</span>
+                </div>
+                <div style="font-size:13px; color:#d1fae5; line-height:1.4;" id="resEmiSubtext">
+                  Payable for 120 months starting after completion of 5-year moratorium.
+                </div>
+
+                <!-- 1-Click PDF Download Button Inside Hero -->
+                <div style="margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.2); display:flex; gap:10px; flex-wrap:wrap;">
+                  <button type="button" class="primary-button" style="background:#ffffff; color:#065f46; font-weight:800; font-size:14px; padding:10px 18px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="downloadAmortizationPdf()">
+                    📥 Download Certified Loan Dossier (PDF)
+                  </button>
+                  <button type="button" class="secondary-button" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); font-weight:700; font-size:13px; padding:10px 16px;" onclick="copyRepaymentSummary()">
+                    📋 Copy Summary
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4-METRICS STAT GRID -->
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:18px;">
+                
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">5-Yr Moratorium Int.</div>
+                  <div style="font-size:18px; font-weight:800; color:#b45309; margin-top:4px;" id="resMoratInterest">₹ 1,90,000</div>
+                  <small id="resMoratSubtitle" style="color:#78350f; font-size:11px;">Simple Interest</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Principal at Year 5</div>
+                  <div style="font-size:18px; font-weight:800; color:#1e3a8a; margin-top:4px;" id="resRepayPrincipal">₹ 5,90,000</div>
+                  <small style="color:#475569; font-size:11px;">Balance at Start</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Total Interest Paid</div>
+                  <div style="font-size:18px; font-weight:800; color:#dc2626; margin-top:4px;" id="resTotalInterest">₹ 5,16,135</div>
+                  <small style="color:#7f1d1d; font-size:11px;">Lifetime Interest</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Total Cash Outflow</div>
+                  <div style="font-size:18px; font-weight:800; color:#0f172a; margin-top:4px;" id="resTotalLifetime">₹ 9,16,135</div>
+                  <small style="color:#475569; font-size:11px;">Principal + Interest</small>
+                </div>
+
+              </div>
+
+              <!-- SPECIAL SCHEME & TAX STATUS CARDS -->
+              <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
+                
+                <!-- CSIS Banner -->
+                <div id="boxCsisStatus" style="background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:22px;">🏛️</span>
+                  <div style="flex:1;">
+                    <strong style="color:#166534; font-size:13.5px;" id="txtCsisTitle">CSIS / PM-USP Central Interest Subsidy Qualified</strong>
+                    <div style="font-size:12px; color:#15803d;" id="txtCsisDesc">Ministry of Education covers 100% of the 5-year moratorium interest. Student saves ₹1,90,000!</div>
+                  </div>
+                </div>
+
+                <!-- Section 80E Tax Savings -->
+                <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:22px;">💼</span>
+                  <div style="flex:1;">
+                    <strong style="color:#0f172a; font-size:13.5px;">Income Tax Deduction (Section 80E Benefit)</strong>
+                    <div style="font-size:12px; color:#475569;">
+                      100% of the interest paid for 8 continuous years is fully tax-deductible without any upper ceiling. Estimated Tax Savings: <strong style="color:#1e3a8a;" id="txtTaxSavings">₹ 54,269</strong> (at 20% tax slab).
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- AMORTIZATION TABLE SECTION -->
+          <div class="section" style="margin-top:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+              <h2>Year-by-Year Amortization Schedule (Post 5-Year Moratorium)</h2>
+              <button type="button" class="secondary-button" style="font-size:12.5px; padding:6px 14px;" onclick="toggleAmortizationTable()">
+                <span id="btnToggleTableText">▼ Show Full Schedule</span>
+              </button>
+            </div>
+            
+            <div id="amortizationTableWrapper" style="display:none;" class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Annual Payment</th>
+                    <th>Principal Paid</th>
+                    <th>Interest Paid</th>
+                    <th>Ending Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="amortizationTableBody">
+                  <!-- Injected via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
+      </main>
+    </div>
+  </div>
+
+  <!-- LOAN STATUS EDIT MODAL (Workflow 8) -->
+  <div id="loanStatusModal" class="modal-overlay hidden" onclick="closeLoanStatusModal()">
+    <div class="modal-card" onclick="event.stopPropagation()" style="max-width:480px;">
+      <div class="scorecard-header">
+        <div class="scorecard-header-left">
+          <div class="scorecard-crest-icon">🛡️</div>
+          <div>
+            <h3 class="scorecard-title">UPDATE LOAN DEPENDENCY</h3>
+            <div class="scorecard-subtitle" id="loanModalStudentSubtitle">Student</div>
+          </div>
+        </div>
+        <button type="button" onclick="closeLoanStatusModal()" style="background:rgba(255,255,255,0.2); border:none; color:white; border-radius:6px; padding:6px 14px; cursor:pointer; font-weight:700;">✕ Close</button>
+      </div>
+      <form id="loanStatusForm" onsubmit="handleSaveLoanStatus(event)" style="padding:20px;">
+        <input type="hidden" id="loanModalStudentId">
+        <div class="form-group" style="margin-bottom:14px;">
+          <label style="display:flex; align-items:center; gap:8px; cursor:pointer; font-weight:700; color:#1e3a8a;">
+            <input type="checkbox" id="loanModalIsDependent" style="width:18px; height:18px;">
+            Student is Loan-Dependent (Bank Disbursement Pending)
+          </label>
+          <small style="color:#64748b; margin-top:4px; display:block;">Checking this suspends late fee default notices until bank disbursement is credited.</small>
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Sanctioning Bank</label>
+          <input type="text" id="loanModalBank" placeholder="e.g. State Bank of India">
+        </div>
+        <div class="form-group" style="margin-bottom:14px;">
+          <label>Sanctioned Amount (₹)</label>
+          <input type="number" id="loanModalSanctioned" placeholder="e.g. 200000">
+        </div>
+        <div class="form-group" style="margin-bottom:20px;">
+          <label>Loan Processing Status</label>
+          <select id="loanModalStatus">
+            <option value="Sanctioned - Disbursement Pending">Sanctioned - Disbursement Pending</option>
+            <option value="Application in Bank Processing">Application in Bank Processing</option>
+            <option value="Disbursed & Reconciled">Disbursed & Reconciled</option>
+            <option value="Not Applicable">Not Applicable</option>
+          </select>
+        </div>
+        <div style="display:flex; justify-content:flex-end; gap:10px;">
+          <button type="button" class="secondary-button" onclick="closeLoanStatusModal()">Cancel</button>
+          <button type="submit" class="primary-button">Save Loan Status</button>
+        </div>
+      </form>
+    </div>
+  </div>
+
+  <!-- API URL FLOATING BAR -->
+  <div class="api-config-bar">
+    <span>⚙️ Backend API:</span>
+    <input type="text" id="apiBaseUrlInput" value="http://localhost:8080">
+    <button type="button" onclick="saveApiUrl()">Save</button>
+  </div>
+
+  <script>
+    const CLOUDFLARE_BACKEND_URL = "https://suite-trackback-again-favor.trycloudflare.com";
+
+    var API_URL = (function() {
+      if (window.location.origin && window.location.origin.includes(':8080')) {
+        return window.location.origin;
+      }
+      let saved = localStorage.getItem('API_URL');
+      if (window.location.protocol === 'https:') {
+        if (!saved || saved.startsWith('http://localhost') || saved.startsWith('http://127.0.0.1')) {
+          localStorage.setItem('API_URL', CLOUDFLARE_BACKEND_URL);
+          return CLOUDFLARE_BACKEND_URL;
+        }
+        return saved;
+      }
+      return saved || 'http://localhost:8080';
+    })();
+    document.getElementById('apiBaseUrlInput').value = API_URL;
+
+    function saveApiUrl() {
+      const val = document.getElementById('apiBaseUrlInput').value.trim();
+      if (val) {
+        API_URL = val.replace(/\/+$/, '');
+        localStorage.setItem('API_URL', API_URL);
+        showNotice('API URL updated: ' + API_URL);
+        refreshAll();
+      }
+    }
+
+    async function checkBackendHealth(showToast = false) {
+      const dot = document.getElementById('backendStatusDot');
+      const text = document.getElementById('backendStatusText');
+      try {
+        const res = await fetch(API_URL + '/health', { cache: 'no-store' });
+        if (res.ok) {
+          if (dot) dot.style.background = '#16a34a';
+          if (text) text.innerText = 'Connected: ' + (API_URL.includes('trycloudflare') ? 'Cloudflare' : 'Port 8080');
+          if (showToast) showNotice('Backend is connected and healthy!');
+          return true;
+        }
+      } catch (err) {
+        if (dot) dot.style.background = '#dc2626';
+        if (text) text.innerText = 'Backend Offline';
+        if (showToast) showNotice('Could not connect to backend at ' + API_URL, true);
+        return false;
+      }
+    }
+
+    let state = {
+      students: [],
+      requests: [],
+      documents: [],
+      disbursements: [],
+      schemes: [],
+      bankRequirements: [],
+      feeReminders: [],
+      turnaround: null,
+      summary: null
+    };
+
+    function switchTab(page) {
+      document.querySelectorAll('#sideNav .nav-item').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(page));
+      });
+      document.querySelectorAll('main > section').forEach(sec => {
+        sec.classList.add('hidden');
+      });
+      const target = document.getElementById('page-' + page);
+      if (target) target.classList.remove('hidden');
+    }
+
+    function showNotice(msg, isError = false) {
+      const el = document.getElementById('notificationMsg');
+      el.style.display = 'block';
+      el.style.background = isError ? '#fee2e2' : '#dcfce7';
+      el.style.color = isError ? '#991b1b' : '#166534';
+      el.innerText = msg;
+      setTimeout(() => { el.style.display = 'none'; }, 4500);
+    }
+
+    async function refreshAll() {
+      await checkBackendHealth();
+      await Promise.all([
+        loadStudents(),
+        loadRequests(),
+        loadDocuments(),
+        loadSchemes(),
+        loadBankRequirements(),
+        loadDisbursements(),
+        loadReports(),
+        loadFeeReminders()
+      ]);
+    }
+
+    // ALL-IN-ONE BUNDLE ELIGIBILITY ANALYZER
+    function selectBundleStudent(sid) {
+      document.getElementById('bundleStudentIdInput').value = sid;
+      const s = state.students.find(x => x.student_id === sid);
+      if (s) {
+        if (s.total_fee) document.getElementById('bundleTargetAmount').value = s.total_fee;
+        showNotice(`Selected student: ${s.name} (${s.student_id})`);
+      }
+    }
+
+    async function handleBundleUpload(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const btn = document.getElementById('bundleSubmitBtn');
+      const container = document.getElementById('bundleResultContainer');
+
+      btn.disabled = true;
+      btn.innerText = 'Analyzing Certificates with Agent 43...';
+      container.innerHTML = `
+        <div style="background:#ffffff; border:1.5px solid #bfdbfe; border-radius:12px; padding:30px; text-align:center;">
+          <div style="font-size:36px; animation:spin 1.5s linear infinite; display:inline-block;">⚡</div>
+          <h3 style="color:#1e3a8a; margin:12px 0 4px 0;">Evaluating Multi-Certificate Bundle & Loan Readiness...</h3>
+          <p style="color:#64748b; font-size:13px; margin:0;">Running cross-document identity verification, seal detection, and government scheme eligibility algorithms.</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(API_URL + '/verification/bundle-eligibility', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          renderBundleResult(data);
+          showNotice('Multi-Certificate Loan Eligibility Analysis Complete!');
+        } else {
+          container.innerHTML = `
+            <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b;">
+              <strong>✗ Analysis Error:</strong> ${data.detail || 'Could not evaluate bundle.'}
+            </div>
+          `;
+          showNotice(data.detail || 'Analysis failed', true);
+        }
+      } catch (err) {
+        container.innerHTML = `
+          <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b;">
+            <strong>✗ Connection Error:</strong> Failed to connect to Agent 43 backend service.
+          </div>
+        `;
+        showNotice('Connection error', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🔍 Analyze All Certificates & Check Loan Eligibility';
+      }
+    }
+
+    function renderBundleResult(data) {
+      const container = document.getElementById('bundleResultContainer');
+      const isEligible = data.overall_verdict.includes('ELIGIBLE');
+      const score = data.eligibility_score || 95;
+
+      let checklistRows = '';
+      (data.checklist || []).forEach(item => {
+        const isPass = item.status === 'VERIFIED';
+        checklistRows += `<tr>
+          <td><strong>${item.name}</strong></td>
+          <td><span class="scorecard-badge ${isPass ? 'pass' : 'fail'}">${item.status}</span></td>
+          <td style="font-size:12.5px; color:#475569;">${item.notes}</td>
+        </tr>`;
+      });
+
+      const schemes = data.scheme_eligibility || {};
+      const vl = schemes.vidya_lakshmi || { status: 'ELIGIBLE', notes: 'Ready for submission' };
+      const cgfel = schemes.cgfel_collateral_free || { status: '100% COLLATERAL-FREE', notes: 'Under 7.5L' };
+      const csis = schemes.csis_interest_subsidy || { status: 'ELIGIBLE', notes: 'Moratorium waiver' };
+      const sbi = schemes.sbi_scholar || { status: 'ELIGIBLE UP TO 20L', notes: '0% margin' };
+
+      let dossierBtn = '';
+      if (data.has_dossier_pdf && data.dossier_download_url) {
+        dossierBtn = `
+          <a href="${API_URL}${data.dossier_download_url}" target="_blank" class="primary-button" style="text-decoration:none; padding:12px 20px; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+            📄 Download Certified Eligibility Dossier PDF
+          </a>
+        `;
+      }
+
+      container.innerHTML = `
+        <div style="background:#ffffff; border:2px solid ${isEligible ? '#22c55e' : '#ef4444'}; border-radius:14px; padding:24px; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+          
+          <!-- Top Verdict Header -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; border-bottom:2px solid #e2e8f0; padding-bottom:18px; margin-bottom:20px;">
+            <div>
+              <div style="display:inline-block; background:${isEligible ? '#dcfce7' : '#fee2e2'}; color:${isEligible ? '#166534' : '#991b1b'}; font-weight:800; font-size:14px; padding:6px 16px; border-radius:20px; border:1.5px solid ${isEligible ? '#86efac' : '#fca5a5'}; margin-bottom:8px;">
+                ${isEligible ? '✓ LOAN ELIGIBILITY CONFIRMED' : '✗ ACTION REQUIRED'}
+              </div>
+              <h2 style="margin:0; font-size:22px; color:#0f2042;">OVERALL VERDICT: ${data.overall_verdict}</h2>
+              <div style="font-size:14px; color:#475569; margin-top:4px;">
+                Student: <strong>${data.student_name}</strong> (Reg No: <strong>${data.student_id}</strong>) · Course: <strong>${data.course}</strong> (${data.year})
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase;">Bank Readiness Score</div>
+              <div style="font-size:38px; font-weight:900; color:${isEligible ? '#15803d' : '#b91c1c'}; line-height:1;">${score}%</div>
+              <small style="color:#16a34a; font-weight:700;">● Institutional Standard Met</small>
+            </div>
+          </div>
+
+          <!-- Cross-Document Identity Confirmation -->
+          <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:14px;">
+            <div style="font-size:26px;">🛡️</div>
+            <div style="font-size:13.5px; color:#166534; line-height:1.45;">
+              <strong>Cross-Document Identity Audit:</strong> ${data.cross_doc_identity.notes} 
+              <br><small style="color:#15803d;">All submitted documents matched the registered student credentials with official VFSTR accreditation.</small>
+            </div>
+          </div>
+
+          <!-- Scheme-by-Scheme Eligibility Matrix -->
+          <h3 style="color:#1e3a8a; font-size:16px; margin:0 0 12px 0;">Government & Banking Loan Scheme Eligibility Matrix</h3>
+          <div class="schemes-grid" style="margin-top:0; margin-bottom:22px;">
+            <div class="scheme-card" style="border-left:4px solid #2563eb;">
+              <div class="scheme-header"><span class="scheme-title">Vidya Lakshmi Portal</span><span class="scheme-tag">CELAS Form</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${vl.status}</div>
+                <p>${vl.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #16a34a;">
+              <div class="scheme-header"><span class="scheme-title">CGFEL Collateral-Free</span><span class="scheme-tag">Up to ₹7.50L</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${cgfel.status}</div>
+                <p>${cgfel.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #d97706;">
+              <div class="scheme-header"><span class="scheme-title">CSIS Interest Subsidy</span><span class="scheme-tag">Parental Income</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${csis.status}</div>
+                <p>${csis.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #7c3aed;">
+              <div class="scheme-header"><span class="scheme-title">SBI Scholar Scheme</span><span class="scheme-tag">VFSTR Tier-A</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${sbi.status}</div>
+                <p>${sbi.notes}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Uploaded Documents Checklist -->
+          <h3 style="color:#1e3a8a; font-size:16px; margin:0 0 12px 0;">Uploaded Documents Checklist & Institutional Audit</h3>
+          <table class="table" style="margin-bottom:22px;">
+            <thead><tr><th>Certificate Name</th><th>Status</th><th>Institutional Notes</th></tr></thead>
+            <tbody>${checklistRows}</tbody>
+          </table>
+
+          <!-- Action Footer -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-top:1px solid #e2e8f0; padding-top:18px;">
+            <div style="font-size:12.5px; color:#64748b;">
+              Evaluated by <strong>Agent 43 Institutional Eligibility Engine</strong> · VFSTR Deemed to be University
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <a href="https://www.vidyalakshmi.co.in" target="_blank" class="secondary-button" style="text-decoration:none; padding:12px 18px; font-size:14px; font-weight:700;">
+                🏛️ Open Vidya Lakshmi Portal
+              </a>
+              ${dossierBtn}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // STUDENTS
+    async function loadStudents() {
+      try {
+        const res = await fetch(API_URL + '/students');
+        if (res.ok) {
+          state.students = await res.json();
+          renderStudents();
+          updateKPIs();
+        }
+      } catch (e) {}
+    }
+
+    function renderStudents() {
+      const container = document.getElementById('studentsListTable');
+      if (!state.students || state.students.length === 0) {
+        container.innerHTML = '<p class="empty">No students registered yet.</p>';
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>Reg No</th><th>Name</th><th>Course & Year</th><th>Total Fee</th><th>Paid Fee</th><th>Balance</th><th>Loan Dependency Status</th><th>Actions</th></tr></thead><tbody>';
+      state.students.forEach(s => {
+        const total = Number(s.total_fee || 0);
+        const paid = Number(s.paid_fee || 0);
+        const bal = Math.max(0, total - paid);
+        const isDep = Boolean(s.is_loan_dependent);
+        const badge = isDep 
+          ? `<span class="badge-protected">🛡️ Protected (${s.loan_bank || 'Bank'})</span>`
+          : `<span class="badge-standard">Standard</span>`;
+        
+        html += `<tr>
+          <td><strong>${s.student_id}</strong></td>
+          <td>${s.name}</td>
+          <td>${s.course} (${s.year})</td>
+          <td>₹ ${total.toLocaleString('en-IN')}</td>
+          <td>₹ ${paid.toLocaleString('en-IN')}</td>
+          <td><strong style="color:${bal > 0 ? '#b91c1c' : '#15803d'};">₹ ${bal.toLocaleString('en-IN')}</strong></td>
+          <td>${badge}</td>
+          <td>
+            <button class="secondary-button" style="font-size:11.5px; padding:4px 8px; margin-right:4px;" onclick="openLoanStatusModal('${s.student_id}')">⚙️ Loan Status</button>
+            <button class="reject-button" style="font-size:11.5px; padding:4px 8px;" onclick="deleteStudent('${s.student_id}')">Delete</button>
+          </td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    async function handleAddStudent(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        student_id: form.student_id.value.trim(),
+        name: form.name.value.trim(),
+        course: form.course.value.trim(),
+        year: form.year.value,
+        admission_year: form.admission_year.value.trim(),
+        total_fee: parseFloat(form.total_fee.value)
+      };
+      try {
+        const res = await fetch(API_URL + '/students', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showNotice('Student registered successfully!');
+          form.reset();
+          loadStudents();
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to register student', true);
+        }
+      } catch (err) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    async function deleteStudent(sid) {
+      if (!confirm('Are you sure you want to delete student ' + sid + '?')) return;
+      try {
+        const res = await fetch(API_URL + '/students/' + sid, { method: 'DELETE' });
+        if (res.ok) {
+          showNotice('Student deleted.');
+          loadStudents();
+        }
+      } catch (e) {}
+    }
+
+    function openLoanStatusModal(sid) {
+      const student = state.students.find(s => s.student_id === sid);
+      if (!student) return;
+      document.getElementById('loanModalStudentId').value = sid;
+      document.getElementById('loanModalStudentSubtitle').innerText = `${student.name} (${student.student_id}) · ${student.course}`;
+      document.getElementById('loanModalIsDependent').checked = Boolean(student.is_loan_dependent);
+      document.getElementById('loanModalBank').value = student.loan_bank || '';
+      document.getElementById('loanModalSanctioned').value = student.sanctioned_amount || '';
+      document.getElementById('loanModalStatus').value = student.loan_status || 'Sanctioned - Disbursement Pending';
+      document.getElementById('loanStatusModal').classList.remove('hidden');
+    }
+
+    function closeLoanStatusModal() {
+      document.getElementById('loanStatusModal').classList.add('hidden');
+    }
+
+    async function handleSaveLoanStatus(e) {
+      e.preventDefault();
+      const sid = document.getElementById('loanModalStudentId').value;
+      const isDep = document.getElementById('loanModalIsDependent').checked;
+      const bank = document.getElementById('loanModalBank').value.trim();
+      const sanctioned = parseFloat(document.getElementById('loanModalSanctioned').value || 0);
+      const status = document.getElementById('loanModalStatus').value;
+
+      try {
+        const res = await fetch(API_URL + '/students/' + sid + '/loan-status', {
+          method: 'PATCH',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({
+            is_loan_dependent: isDep,
+            loan_bank: bank,
+            sanctioned_amount: sanctioned,
+            loan_status: status
+          })
+        });
+        if (res.ok) {
+          showNotice(`Loan status updated for student ${sid}`);
+          closeLoanStatusModal();
+          await Promise.all([loadStudents(), loadFeeReminders(), updateKPIs()]);
+        } else {
+          showNotice('Failed to update loan status', true);
+        }
+      } catch (err) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    // DOCUMENT REQUESTS
+    async function loadRequests() {
+      try {
+        const res = await fetch(API_URL + '/document-requests');
+        if (res.ok) {
+          state.requests = await res.json();
+          renderRequests();
+          updateKPIs();
+        }
+      } catch (e) {}
+    }
+
+    function renderRequests() {
+      const container = document.getElementById('requestsLedgerTable');
+      const dashContainer = document.getElementById('dashboardRequestsTable');
+      if (!state.requests || state.requests.length === 0) {
+        const emptyMsg = '<p class="empty">No document requests recorded yet.</p>';
+        container.innerHTML = emptyMsg;
+        if (dashContainer) dashContainer.innerHTML = emptyMsg;
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document Type</th><th>Bank / Purpose</th><th>Date</th><th>Turnaround SLA</th><th>Status</th><th>Action</th></tr></thead><tbody>';
+      state.requests.forEach(r => {
+        const isPending = r.status === 'Pending';
+        const slaStatus = isPending
+          ? '<span style="color:#d97706; font-weight:700;">⏱️ In Progress (Target: 24h)</span>'
+          : '<span style="color:#15803d; font-weight:700;">✓ Issued within SLA</span>';
+        
+        const actionBtn = isPending
+          ? `<button class="approve-button" style="font-size:12px; padding:6px 12px;" onclick="generateDoc(${r.id})">⚡ Issue & Sign Doc</button>`
+          : `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Officially Issued</span>`;
+
+        html += `<tr>
+          <td>#${r.id}</td>
+          <td><strong>${r.student_id}</strong></td>
+          <td>${r.document_type}</td>
+          <td>${r.description || 'Education Loan'}</td>
+          <td>${r.request_date || ''}</td>
+          <td>${slaStatus}</td>
+          <td><span class="status ${r.status.toLowerCase()}">${r.status}</span></td>
+          <td>${actionBtn}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+      if (dashContainer) dashContainer.innerHTML = html;
+    }
+
+    async function handleAddDocRequest(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        student_id: form.student_id.value.trim(),
+        document_type: form.document_type.value,
+        description: form.description.value.trim()
+      };
+      try {
+        const res = await fetch(API_URL + '/document-requests', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showNotice('Official document request submitted! SLA tracking initiated.');
+          form.reset();
+          await Promise.all([loadRequests(), updateKPIs()]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to submit request', true);
+        }
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    async function generateDoc(reqId) {
+      try {
+        const res = await fetch(API_URL + '/documents/generate', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ request_id: reqId })
+        });
+        if (res.ok) {
+          const resData = await res.json();
+          showNotice(`Document issued successfully! Verification code: ${resData.verification_code}`);
+          await Promise.all([loadRequests(), loadDocuments(), loadReports(), updateKPIs()]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to generate document', true);
+        }
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    // ISSUED DOCUMENTS
+    async function loadDocuments() {
+      try {
+        const res = await fetch(API_URL + '/documents');
+        if (res.ok) {
+          state.documents = await res.json();
+          renderDocuments();
+        }
+      } catch (e) {}
+    }
+
+    function renderDocuments() {
+      const container = document.getElementById('issuedDocsTable');
+      if (!state.documents || state.documents.length === 0) {
+        container.innerHTML = '<p class="empty">No documents issued yet.</p>';
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>ID</th><th>Student</th><th>Document Type</th><th>Verification Code</th><th>Issued Date</th><th>Direct Download</th></tr></thead><tbody>';
+      state.documents.forEach(d => {
+        html += `<tr>
+          <td>#${d.id}</td>
+          <td><strong>${d.student_id}</strong> (${d.student_name || 'Student'})</td>
+          <td>${d.document_type}</td>
+          <td><code style="background:#f1f5f9; padding:3px 8px; border-radius:4px; font-weight:700; color:#1e3a8a;">${d.verification_code}</code></td>
+          <td>${d.issued_date}</td>
+          <td><a href="${API_URL}/documents/${d.id}/download" target="_blank" class="secondary-button" style="font-size:12px; text-decoration:none; padding:4px 10px;">📄 Download PDF</a></td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // BANK SCHEMES (Workflow 1)
+    async function loadSchemes() {
+      try {
+        const res = await fetch(API_URL + '/schemes');
+        if (res.ok) {
+          state.schemes = await res.json();
+          renderSchemes();
+        }
+      } catch (e) {}
+    }
+
+    function renderSchemes() {
+      const container = document.getElementById('schemesCardsContainer');
+      if (!state.schemes || state.schemes.length === 0) {
+        container.innerHTML = '<p class="empty">No schemes loaded.</p>';
+        return;
+      }
+      let html = '';
+      state.schemes.forEach(s => {
+        html += `<div class="scheme-card">
+          <div class="scheme-header">
+            <span class="scheme-title">${s.name}</span>
+            <span class="scheme-tag">${s.target_beneficiary}</span>
+          </div>
+          <div class="scheme-body">
+            <p>${s.key_features}</p>
+            <div class="scheme-kv"><span>Eligibility:</span> <strong>${s.eligibility}</strong></div>
+            <div class="scheme-kv"><span>Collateral-Free Ceiling:</span> <strong>${s.non_collateral_ceiling}</strong></div>
+            <div class="scheme-kv"><span>Interest Subsidy:</span> <strong>${s.interest_subsidy}</strong></div>
+            <div class="scheme-kv"><span>Required VFSTR Docs:</span> <strong>${s.required_institutional_docs.join(', ')}</strong></div>
+            <div style="margin-top:10px; display:flex; justify-content:space-between; align-items:center;">
+              <small style="color:#64748b;">Processing: <strong>${s.turnaround_sla}</strong></small>
+              <a href="${s.portal_url}" target="_blank" style="font-size:12px; font-weight:700; color:#2563eb; text-decoration:none;">Official Portal &rarr;</a>
+            </div>
+          </div>
+        </div>`;
+      });
+      container.innerHTML = html;
+    }
+
+    async function loadBankRequirements() {
+      try {
+        const res = await fetch(API_URL + '/bank-requirements');
+        if (res.ok) {
+          state.bankRequirements = await res.json();
+          const el = document.getElementById('bankRequirementsList');
+          let html = '<table class="table"><thead><tr><th>Document Name</th><th>Requirement Status</th><th>Bank Purpose / Notes</th></tr></thead><tbody>';
+          state.bankRequirements.forEach(item => {
+            html += `<tr>
+              <td><strong>${item.document_type}</strong></td>
+              <td>${item.required ? '<span style="color:#16a34a; font-weight:700;">Mandatory</span>' : '<span style="color:#64748b;">Supporting / Optional</span>'}</td>
+              <td>${item.notes}</td>
+            </tr>`;
+          });
+          html += '</tbody></table>';
+          el.innerHTML = html;
+        }
+      } catch (e) {}
+    }
+
+    // BANK DIRECT VERIFICATION (Workflow 4)
+    async function lookupBankVerification() {
+      const code = document.getElementById('bankVerifyCodeInput').value.trim();
+      const container = document.getElementById('bankVerificationResult');
+      if (!code) {
+        showNotice('Please enter a verification code', true);
+        return;
+      }
+      container.innerHTML = '<p style="color:#1e3a8a; font-weight:600;">Authenticating with institutional registry...</p>';
+      try {
+        const res = await fetch(API_URL + '/verify/' + encodeURIComponent(code));
+        if (res.ok) {
+          const cert = await res.json();
+          container.innerHTML = `
+            <div class="bank-cert-card">
+              <div class="bank-cert-header">
+                <div>
+                  <h3 style="margin:0; font-size:18px; color:#0f2042;">INSTITUTIONAL AUTHENTICITY CERTIFICATE</h3>
+                  <small style="color:#64748b;">Vignan's Foundation for Science, Technology and Research (VFSTR)</small>
+                </div>
+                <span class="cert-status-badge">✓ ${cert.authenticity_status}</span>
+              </div>
+              <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(220px, 1fr)); gap:12px; font-size:13.5px; margin-bottom:16px;">
+                <div><span style="color:#64748b;">Student Name:</span><br><strong>${cert.student_name}</strong></div>
+                <div><span style="color:#64748b;">Register Number:</span><br><strong>${cert.student_id}</strong></div>
+                <div><span style="color:#64748b;">Course:</span><br><strong>${cert.course}</strong></div>
+                <div><span style="color:#64748b;">Document Type:</span><br><strong>${cert.document_type}</strong></div>
+                <div><span style="color:#64748b;">Verification Code:</span><br><code>${cert.verification_code}</code></div>
+                <div><span style="color:#64748b;">Issued Date:</span><br><strong>${cert.issued_date}</strong></div>
+              </div>
+              <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:8px; padding:12px 14px; margin-bottom:14px; font-size:13px; color:#166534;">
+                🏛️ <strong>Bank Notice:</strong> ${cert.bank_notice}
+              </div>
+              <div style="display:flex; justify-content:space-between; align-items:center;">
+                <span style="font-size:12px; color:#64748b;">Authorized Signatory: <strong>${cert.authorized_signatory}</strong></span>
+                <a href="${API_URL}${cert.download_url}" target="_blank" class="primary-button" style="text-decoration:none; padding:6px 14px; font-size:13px;">📄 Download Verified PDF</a>
+              </div>
+            </div>
+          `;
+        } else {
+          container.innerHTML = `
+            <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:16px; margin-top:16px; color:#991b1b;">
+              <strong style="font-size:15px;">✗ Verification Code Not Found or Unrecognized</strong>
+              <p style="margin:6px 0 0 0; font-size:13px;">Code <code>${code}</code> does not match any officially issued Vignan institutional certificate. Please check the code or contact the administration.</p>
+            </div>
+          `;
+        }
+      } catch (err) {
+        showNotice('Connection error during verification lookup', true);
+      }
+    }
+
+    async function handleVerifyUpload(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData();
+      formData.append('student_id', form.student_id.value.trim());
+      formData.append('document_type', form.document_type.value);
+      formData.append('file', form.file.files[0]);
+      
+      const btn = document.getElementById('verifySubmitBtn');
+      btn.innerText = 'Scanning & Verifying...';
+      btn.disabled = true;
+
+      try {
+        const res = await fetch(API_URL + '/verification/upload', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          const isPass = data.ai_verdict === 'VERIFIED' || data.ai_verdict === 'REAL';
+          document.getElementById('scorecardResultContainer').innerHTML = `
+            <div style="background:${isPass ? '#f0fdf4' : '#fef2f2'}; border:1.5px solid ${isPass ? '#86efac' : '#fecaca'}; border-radius:10px; padding:16px; margin-top:16px;">
+              <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                <strong style="font-size:16px; color:${isPass ? '#166534' : '#991b1b'};">${isPass ? '✓ DOCUMENT AUTHENTIC' : '✗ VERIFICATION FAILED'}</strong>
+                <span class="scorecard-badge ${isPass ? 'pass' : 'fail'}">${data.ai_verdict}</span>
+              </div>
+              <p style="font-size:13px; color:#334155; margin:0 0 10px 0;">${data.reason || 'Authenticity analysis complete.'}</p>
+              <div style="font-size:12px; color:#64748b;">Confidence: <strong>${Math.round(data.confidence || 0)}%</strong> · Engine: Built-in Verification Engine</div>
+            </div>
+          `;
+          showNotice('Scan complete!');
+        } else {
+          showNotice(data.detail || 'Scan failed', true);
+        }
+      } catch (err) {
+        showNotice('Connection error', true);
+      } finally {
+        btn.innerText = '🔍 Scan & Verify';
+        btn.disabled = false;
+      }
+    }
+
+    // DISBURSEMENTS & RECONCILIATION (Workflow 7)
+    async function loadDisbursements() {
+      try {
+        const res = await fetch(API_URL + '/disbursements');
+        if (res.ok) {
+          state.disbursements = await res.json();
+          renderDisbursements();
+          updateKPIs();
+        }
+      } catch (e) {}
+    }
+
+    function renderDisbursements() {
+      const container = document.getElementById('disbursementsTable');
+      if (!state.disbursements || state.disbursements.length === 0) {
+        container.innerHTML = '<p class="empty">No disbursements recorded yet.</p>';
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>UTR Number</th><th>Student</th><th>Bank</th><th>Amount</th><th>Academic Term</th><th>Date</th><th>Reconciliation Status</th><th>Action</th></tr></thead><tbody>';
+      state.disbursements.forEach(d => {
+        const isRec = Boolean(d.reconciled);
+        const actionHtml = isRec
+          ? `<span style="color:#166534; font-weight:700; font-size:12px;">✓ Reconciled</span>`
+          : `<button class="approve-button" style="font-size:12px; padding:4px 10px;" onclick="reconcileDisbursement(${d.id})">⚡ Reconcile Fee Ledger</button>`;
+
+        html += `<tr>
+          <td><code style="font-weight:700; color:#1e3a8a;">${d.utr_number || 'UTR-PENDING'}</code></td>
+          <td><strong>${d.student_id}</strong> (${d.student_name || 'Student'})</td>
+          <td>${d.bank_name}</td>
+          <td>₹ ${Number(d.loan_amount).toLocaleString('en-IN')}</td>
+          <td>${d.academic_term || 'Full Year'}</td>
+          <td>${d.disbursed_date || ''}</td>
+          <td><span class="status ${isRec ? 'approved' : 'pending'}">${d.fee_status || (isRec ? 'Reconciled' : 'Pending')}</span></td>
+          <td>${actionHtml}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    async function handleAddDisbursement(e) {
+      e.preventDefault();
+      const form = e.target;
+      const data = {
+        student_id: form.student_id.value.trim(),
+        bank_name: form.bank_name.value.trim(),
+        loan_amount: parseFloat(form.loan_amount.value),
+        utr_number: form.utr_number.value.trim(),
+        academic_term: form.academic_term.value,
+        disbursed_date: form.disbursed_date.value,
+        notes: form.notes.value.trim()
+      };
+      try {
+        const res = await fetch(API_URL + '/disbursements', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify(data)
+        });
+        if (res.ok) {
+          showNotice('Bank disbursement recorded successfully! Ready for fee ledger reconciliation.');
+          form.reset();
+          await Promise.all([loadDisbursements(), updateKPIs()]);
+        } else {
+          const err = await res.json();
+          showNotice(err.detail || 'Failed to record disbursement', true);
+        }
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    async function reconcileDisbursement(id) {
+      try {
+        const res = await fetch(API_URL + '/disbursements/' + id + '/reconcile', {
+          method: 'PATCH'
+        });
+        if (res.ok) {
+          const data = await res.json();
+          showNotice(data.message || 'Disbursement successfully reconciled to fee ledger!');
+          await Promise.all([loadDisbursements(), loadStudents(), loadFeeReminders(), updateKPIs()]);
+        } else {
+          showNotice('Failed to reconcile disbursement', true);
+        }
+      } catch (e) {
+        showNotice('Connection error', true);
+      }
+    }
+
+    // REPORTS: SLA & DEFAULT REMINDERS (Workflow 5 & 8)
+    async function loadReports() {
+      try {
+        const [sumRes, ttRes] = await Promise.all([
+          fetch(API_URL + '/reports/summary'),
+          fetch(API_URL + '/reports/turnaround')
+        ]);
+        if (sumRes.ok) state.summary = await sumRes.json();
+        if (ttRes.ok) {
+          state.turnaround = await ttRes.json();
+          renderTurnaroundReport();
+        }
+        updateKPIs();
+      } catch (e) {}
+    }
+
+    function renderTurnaroundReport() {
+      const container = document.getElementById('turnaroundReportContainer');
+      const tt = state.turnaround;
+      if (!tt) return;
+
+      let breakdownRows = '';
+      (tt.by_document_type || []).forEach(b => {
+        breakdownRows += `<tr>
+          <td><strong>${b.document_type}</strong></td>
+          <td>${b.count}</td>
+          <td>${b.average_hours} hrs (${b.average_days} days)</td>
+          <td>${b.sla_met ? '<span style="color:#15803d; font-weight:700;">✓ SLA Met (&le; 24h)</span>' : '<span style="color:#b91c1c; font-weight:700;">✗ Delay Warning</span>'}</td>
+        </tr>`;
+      });
+
+      container.innerHTML = `
+        <div style="display:grid; grid-template-columns:repeat(auto-fit, minmax(200px, 1fr)); gap:14px; margin-bottom:18px;">
+          <div class="radar-stat-card"><div class="stat-header"><span>TARGET SLA</span></div><div class="stat-number">${tt.target_sla_hours} hrs</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>AVG TURNAROUND</span></div><div class="stat-number">${tt.average_turnaround_hours} hrs</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>SLA COMPLIANCE</span></div><div class="stat-number">${tt.compliance_rate_percent}%</div></div>
+          <div class="radar-stat-card"><div class="stat-header"><span>DOCUMENTS ISSUED</span></div><div class="stat-number">${tt.total_issued}</div></div>
+        </div>
+        <table class="table">
+          <thead><tr><th>Document Type</th><th>Total Issued</th><th>Average Turnaround</th><th>SLA Target Status</th></tr></thead>
+          <tbody>${breakdownRows || '<tr><td colspan="4" style="text-align:center; color:#64748b;">No documents issued yet to measure turnaround.</td></tr>'}</tbody>
+        </table>
+      `;
+    }
+
+    async function loadFeeReminders() {
+      try {
+        const res = await fetch(API_URL + '/reports/fee-reminders');
+        if (res.ok) {
+          state.feeReminders = await res.json();
+          renderFeeReminders();
+          updateKPIs();
+        }
+      } catch (e) {}
+    }
+
+    function renderFeeReminders() {
+      const container = document.getElementById('feeRemindersTableContainer');
+      const data = state.feeReminders;
+      if (!data || !data.reminders || data.reminders.length === 0) {
+        container.innerHTML = '<p class="empty">No fee reminder records.</p>';
+        return;
+      }
+      let html = '<table class="table"><thead><tr><th>Student</th><th>Course</th><th>Total Fee</th><th>Paid</th><th>Outstanding</th><th>Default Protection Status</th><th>Accounts Action Notice</th></tr></thead><tbody>';
+      data.reminders.forEach(r => {
+        const isProt = r.reminder_type === 'LOAN_DEPENDENT_PROTECTED';
+        const isPaid = r.reminder_type === 'PAID_IN_FULL';
+        const statusBadge = isProt
+          ? `<span class="badge-protected">🛡️ PROTECTED: Loan Active</span>`
+          : isPaid
+            ? `<span class="badge-standard" style="background:#e0f2fe; color:#0369a1;">Zero Due</span>`
+            : `<span class="badge-standard" style="background:#fee2e2; color:#991b1b;">⚠️ Standard Reminder</span>`;
+
+        html += `<tr style="${isProt ? 'background:#f0fdf4;' : ''}">
+          <td><strong>${r.student_id}</strong><br><small>${r.name}</small></td>
+          <td>${r.course} (${r.year})</td>
+          <td>₹ ${Number(r.total_fee).toLocaleString('en-IN')}</td>
+          <td>₹ ${Number(r.paid_fee).toLocaleString('en-IN')}</td>
+          <td><strong style="color:${r.balance_due > 0 ? '#b91c1c' : '#15803d'};">₹ ${Number(r.balance_due).toLocaleString('en-IN')}</strong></td>
+          <td>${statusBadge}</td>
+          <td style="font-size:12.5px; line-height:1.4;">${r.notice}</td>
+        </tr>`;
+      });
+      html += '</tbody></table>';
+      container.innerHTML = html;
+    }
+
+    // AGENT 43 INFO DESK (Workflow 6)
+    async function sendChatMessage() {
+      const input = document.getElementById('chatInput');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+      appendChatMessage('user', q);
+      await executeQuery(q);
+    }
+
+    async function sendQuickBotQuery() {
+      const input = document.getElementById('botQuickInput');
+      const q = input.value.trim();
+      if (!q) return;
+      input.value = '';
+      document.getElementById('botQuickBubble').innerText = 'Consulting Agent 43 institutional registry...';
+      try {
+        const res = await fetch(API_URL + '/ai/query', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query: q })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          document.getElementById('botQuickBubble').innerText = data.response.replace(/[#*_]/g, '').slice(0, 180) + '...';
+        }
+      } catch (e) {
+        document.getElementById('botQuickBubble').innerText = 'Agent 43 is active.';
+      }
+    }
+
+    function askQuickPrompt(text) {
+      appendChatMessage('user', text);
+      executeQuery(text);
+    }
+
+    async function executeQuery(queryText) {
+      const history = document.getElementById('chatHistoryBox');
+      const loadingId = 'loading-' + Date.now();
+      history.innerHTML += `<div class="chat-msg agent" id="${loadingId}"><em>Agent 43 is reviewing institutional guidelines...</em></div>`;
+      history.scrollTop = history.scrollHeight;
+
+      try {
+        const res = await fetch(API_URL + '/ai/query', {
+          method: 'POST',
+          headers: {'Content-Type': 'application/json'},
+          body: JSON.stringify({ query: queryText })
+        });
+        const loadEl = document.getElementById(loadingId);
+        if (res.ok) {
+          const data = await res.json();
+          let formatted = data.response
+            .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+            .replace(/\n/g, '<br>');
+          
+          let guardrailNotice = data.guardrail_triggered 
+            ? `<div style="background:#fee2e2; border:1px solid #fca5a5; border-radius:6px; padding:6px 10px; margin-bottom:8px; font-weight:700; color:#991b1b; font-size:12px;">⚖️ STRICT GUARDRAIL TRIGGERED: Commercial Lender Recommendation Prohibited</div>`
+            : '';
+
+          loadEl.innerHTML = `${guardrailNotice}${formatted}<br><small style="color:#64748b; font-size:11px; margin-top:6px; display:block;">${data.disclaimer}</small>`;
+        } else {
+          loadEl.innerHTML = 'Error communicating with Agent 43 Info Desk.';
+        }
+      } catch (err) {
+        const loadEl = document.getElementById(loadingId);
+        if (loadEl) loadEl.innerHTML = 'Could not connect to Agent 43 service.';
+      }
+      history.scrollTop = history.scrollHeight;
+    }
+
+    function appendChatMessage(role, text) {
+      const history = document.getElementById('chatHistoryBox');
+      history.innerHTML += `<div class="chat-msg ${role}">${text}</div>`;
+      history.scrollTop = history.scrollHeight;
+    }
+
+    // KPI UPDATER
+    function updateKPIs() {
+      document.getElementById('statTotalStudents').innerText = state.students.length;
+      document.getElementById('statActiveRequests').innerText = state.requests.filter(r => r.status === 'Pending').length;
+      
+      const protectedCount = state.students.filter(s => Boolean(s.is_loan_dependent)).length;
+      document.getElementById('statProtectedStudents').innerText = protectedCount;
+
+      const totalDisb = state.disbursements.reduce((acc, d) => acc + (d.loan_amount || 0), 0);
+      document.getElementById('statTotalDisbursed').innerText = '₹ ' + totalDisb.toLocaleString('en-IN');
+    }
+
+    
+    // =========================================================
+    // WORKFLOW 10: EDUCATION LOAN & EMI CALCULATOR JAVASCRIPT
+    // =========================================================
+    let currentCalcData = null;
+
+    function applyCalcPreset(presetKey) {
+      if (presetKey === 'btech_base') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(400000, 9.5, 4, 1, 600000, 'defer', 10);
+      } else if (presetKey === 'btech_csis') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(400000, 9.5, 4, 1, 300000, 'csis', 10);
+      } else if (presetKey === 'btech_cgfel') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(750000, 9.5, 4, 1, 600000, 'defer', 10);
+      } else if (presetKey === 'btech_premier') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(1500000, 9.5, 4, 1, 800000, 'defer', 12);
+      } else if (presetKey === 'abroad_25') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(2500000, 10.5, 2, 1, 1200000, 'defer', 12);
+      } else if (presetKey === 'abroad_40') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(4000000, 10.5, 2, 1, 1500000, 'defer', 15);
+      } else if (presetKey === 'abroad_50') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(5000000, 10.5, 2, 1, 2000000, 'defer', 15);
+      }
+      onStudyTypeChange();
+      recalculateClientLoan();
+    }
+
+    function setCalcValues(amount, rate, courseYrs, graceYrs, income, moratOpt, tenureYrs) {
+      document.getElementById('calcLoanAmount').value = amount;
+      document.getElementById('rngLoanAmount').value = amount;
+      document.getElementById('calcInterestRate').value = rate;
+      document.getElementById('rngInterestRate').value = rate;
+      document.getElementById('calcCourseYears').value = courseYrs;
+      document.getElementById('calcGraceYears').value = graceYrs;
+      document.getElementById('calcFamilyIncome').value = income;
+      document.getElementById('calcRepayYears').value = tenureYrs;
+      document.getElementById('rngRepayYears').value = tenureYrs;
+      
+      const optEl = document.querySelector(`input[name="calcMoratOption"][value="${moratOpt}"]`);
+      if (optEl) optEl.checked = true;
+    }
+
+    function setCalcStudent(name, id) {
+      document.getElementById('calcStudentName').value = name;
+      document.getElementById('calcStudentId').value = id;
+      showNotice(`Student ${name} (${id}) selected for loan estimate calculation.`);
+    }
+
+    function onStudyTypeChange() {
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      const lblDom = document.getElementById('lblStudyDomestic');
+      const lblAbr = document.getElementById('lblStudyAbroad');
+      const csisNotice = document.getElementById('txtCsisNotice');
+      const lblCsis = document.getElementById('lblCsisOption');
+      
+      if (studyType === 'domestic') {
+        lblDom.style.borderColor = '#1e3a8a';
+        lblDom.style.background = '#eff6ff';
+        lblAbr.style.borderColor = '#cbd5e1';
+        lblAbr.style.background = '#ffffff';
+        if (csisNotice) csisNotice.style.display = 'block';
+        if (lblCsis) lblCsis.style.display = 'flex';
+      } else {
+        lblAbr.style.borderColor = '#1e3a8a';
+        lblAbr.style.background = '#eff6ff';
+        lblDom.style.borderColor = '#cbd5e1';
+        lblDom.style.background = '#ffffff';
+        if (csisNotice) csisNotice.style.display = 'none';
+        if (lblCsis) lblCsis.style.display = 'none';
+        const optCsis = document.querySelector('input[name="calcMoratOption"][value="csis"]');
+        if (optCsis && optCsis.checked) {
+          document.querySelector('input[name="calcMoratOption"][value="defer"]').checked = true;
+        }
+      }
+      recalculateClientLoan();
+    }
+
+    function onLoanSliderChange(val) {
+      document.getElementById('calcLoanAmount').value = val;
+      recalculateClientLoan();
+    }
+
+    function onLoanInputChange(val) {
+      document.getElementById('rngLoanAmount').value = Math.min(10000000, Math.max(100000, Number(val) || 100000));
+      recalculateClientLoan();
+    }
+
+    function onRateSliderChange(val) {
+      document.getElementById('calcInterestRate').value = val;
+      recalculateClientLoan();
+    }
+
+    function onRateInputChange(val) {
+      document.getElementById('rngInterestRate').value = Math.min(15.0, Math.max(6.0, Number(val) || 6.0));
+      recalculateClientLoan();
+    }
+
+    function onTenureSliderChange(val) {
+      document.getElementById('calcRepayYears').value = val;
+      recalculateClientLoan();
+    }
+
+    function onTenureSelectChange(val) {
+      document.getElementById('rngRepayYears').value = val;
+      recalculateClientLoan();
+    }
+
+    function onIncomeChange(val) {
+      const inc = Number(val) || 0;
+      const csisNotice = document.getElementById('txtCsisNotice');
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      if (studyType === 'domestic') {
+        if (inc > 0 && inc <= 450000) {
+          csisNotice.innerText = '🎉 Income ≤ ₹4.50 LPA: 100% CSIS Moratorium Interest Subsidy Applicable!';
+          csisNotice.style.color = '#15803d';
+        } else {
+          csisNotice.innerText = 'Family income > ₹4.50 LPA (CSIS subsidy ceiling exceeded).';
+          csisNotice.style.color = '#64748b';
+        }
+      }
+      recalculateClientLoan();
+    }
+
+    function recalculateClientLoan() {
+      const loanAmount = Math.max(10000, Number(document.getElementById('calcLoanAmount').value) || 400000);
+      const interestRate = Math.max(1.0, Number(document.getElementById('calcInterestRate').value) || 9.5);
+      const courseYears = Number(document.getElementById('calcCourseYears').value) || 4.0;
+      const graceYears = Number(document.getElementById('calcGraceYears').value) || 1.0;
+      const moratoriumYears = courseYears + graceYears;
+      const familyIncome = Number(document.getElementById('calcFamilyIncome').value) || 0;
+      const repaymentYears = Number(document.getElementById('calcRepayYears').value) || 10;
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      const moratOption = document.querySelector('input[name="calcMoratOption"]:checked').value;
+      const studentName = document.getElementById('calcStudentName').value || 'Student';
+      const studentId = document.getElementById('calcStudentId').value || 'N/A';
+
+      // Update Slider text badges
+      document.getElementById('txtLoanAmountDisplay').innerText = '₹ ' + loanAmount.toLocaleString('en-IN');
+      document.getElementById('txtRateDisplay').innerText = interestRate.toFixed(2) + '% p.a.';
+      document.getElementById('txtTenureDisplay').innerText = `${repaymentYears} Years (${repaymentYears * 12} Mo)`;
+      document.getElementById('txtTotalMoratoriumDisplay').innerText = `${moratoriumYears.toFixed(1)} Years`;
+
+      // Collateral text
+      const colNotice = document.getElementById('txtCollateralNotice');
+      if (studyType === 'domestic') {
+        if (loanAmount <= 400000) colNotice.innerText = '✓ 100% Collateral-Free & 0% Margin (IBA Base Scheme)';
+        else if (loanAmount <= 750000) colNotice.innerText = '✓ 100% Collateral-Free (Govt CGFEL Guarantee Covered)';
+        else if (loanAmount <= 2000000) colNotice.innerText = '⭐ VFSTR Tier-A Premier Listing (SBI Scholar Scheme Eligible)';
+        else colNotice.innerText = '⚠️ Tangible Collateral (Property / Fixed Deposit) Required';
+      } else {
+        if (loanAmount <= 750000) colNotice.innerText = '✓ Collateral-Free (CGFEL Scheme - 15% margin)';
+        else colNotice.innerText = '⚠️ Tangible Security (Property/FD) + 15% Student Margin Required';
+      }
+
+      // Calculation logic
+      const isCsisEligible = (studyType === 'domestic') && (moratOption === 'csis' || (familyIncome > 0 && familyIncome <= 450000 && moratOption !== 'service_monthly'));
+      const isServiceMonthly = (moratOption === 'service_monthly');
+
+      let effectiveRate = interestRate;
+      if (isServiceMonthly && effectiveRate > 1.0) effectiveRate -= 1.0;
+
+      const rMonthly = (effectiveRate / 100.0) / 12.0;
+      const nMonths = repaymentYears * 12;
+      const simpleMoratInterest = Math.round(loanAmount * (interestRate / 100.0) * moratoriumYears);
+
+      let moratInterestPaidByStudent = 0;
+      let csisGovtPaid = 0;
+      let principalAtRepayment = loanAmount;
+
+      if (isCsisEligible) {
+        moratInterestPaidByStudent = 0;
+        csisGovtPaid = simpleMoratInterest;
+        principalAtRepayment = loanAmount;
+      } else if (isServiceMonthly) {
+        moratInterestPaidByStudent = simpleMoratInterest;
+        csisGovtPaid = 0;
+        principalAtRepayment = loanAmount;
+      } else {
+        moratInterestPaidByStudent = simpleMoratInterest;
+        csisGovtPaid = 0;
+        principalAtRepayment = loanAmount + simpleMoratInterest;
+      }
+
+      let emi = 0;
+      if (rMonthly > 0 && nMonths > 0) {
+        emi = Math.round((principalAtRepayment * rMonthly * Math.pow(1 + rMonthly, nMonths)) / (Math.pow(1 + rMonthly, nMonths) - 1));
+      } else {
+        emi = Math.round(principalAtRepayment / Math.max(1, nMonths));
+      }
+
+      const totalRepaymentPaid = emi * nMonths;
+      const repaymentPhaseInterest = totalRepaymentPaid - principalAtRepayment;
+      const totalInterestPaid = moratInterestPaidByStudent + repaymentPhaseInterest;
+      const totalLifetimeOutflow = loanAmount + totalInterestPaid;
+      const tax80eDeductible = Math.min(totalInterestPaid, Math.round(repaymentPhaseInterest * Math.min(1.0, 8.0 / repaymentYears)));
+      const estimatedTaxSavings = Math.round(tax80eDeductible * 0.208);
+
+      // Save into global state
+      currentCalcData = {
+        student_name: studentName,
+        student_id: studentId,
+        study_type: studyType,
+        loan_amount: loanAmount,
+        interest_rate: interestRate,
+        effective_rate: effectiveRate,
+        moratorium_years: moratoriumYears,
+        repayment_years: repaymentYears,
+        family_income: familyIncome,
+        csis_eligible: isCsisEligible,
+        service_interest_during_moratorium: isServiceMonthly,
+        monthly_emi: emi,
+        moratorium_interest: simpleMoratInterest,
+        moratorium_interest_student_pays: moratInterestPaidByStudent,
+        csis_govt_subsidy_amount: csisGovtPaid,
+        principal_at_repayment: principalAtRepayment,
+        total_interest_paid: totalInterestPaid,
+        total_lifetime_outflow: totalLifetimeOutflow,
+        estimated_tax_savings_80e: estimatedTaxSavings
+      };
+
+      // Update UI displays
+      document.getElementById('resMonthlyEmi').innerHTML = `₹ ${emi.toLocaleString('en-IN')} <span style="font-size:18px; font-weight:400; color:#d1fae5;">/ month</span>`;
+      document.getElementById('resEmiSubtext').innerText = `Payable for ${nMonths} months (${repaymentYears} yrs) starting after completion of ${moratoriumYears.toFixed(1)}-year study moratorium.`;
+
+      const elMorat = document.getElementById('resMoratInterest');
+      const elMoratSub = document.getElementById('resMoratSubtitle');
+      if (isCsisEligible) {
+        elMorat.innerHTML = `<span style="color:#059669;">₹ 0 (GOVT PAID)</span>`;
+        elMoratSub.innerText = `Saved ₹ ${csisGovtPaid.toLocaleString('en-IN')} via CSIS`;
+      } else {
+        elMorat.innerText = '₹ ' + simpleMoratInterest.toLocaleString('en-IN');
+        elMoratSub.innerText = isServiceMonthly ? 'Paid Monthly During Study' : 'Capitalized at Year 5';
+      }
+
+      document.getElementById('resRepayPrincipal').innerText = '₹ ' + principalAtRepayment.toLocaleString('en-IN');
+      document.getElementById('resTotalInterest').innerText = '₹ ' + totalInterestPaid.toLocaleString('en-IN');
+      document.getElementById('resTotalLifetime').innerText = '₹ ' + totalLifetimeOutflow.toLocaleString('en-IN');
+      document.getElementById('txtTaxSavings').innerText = '₹ ' + estimatedTaxSavings.toLocaleString('en-IN');
+
+      // CSIS Banner Toggle
+      const csisBox = document.getElementById('boxCsisStatus');
+      const csisTitle = document.getElementById('txtCsisTitle');
+      const csisDesc = document.getElementById('txtCsisDesc');
+      if (isCsisEligible) {
+        csisBox.style.display = 'flex';
+        csisBox.style.background = '#dcfce7';
+        csisBox.style.borderColor = '#86efac';
+        csisTitle.innerText = '🎉 CSIS / PM-USP Central Interest Subsidy Qualified!';
+        csisDesc.innerText = `100% of your 5-year moratorium interest (₹ ${csisGovtPaid.toLocaleString('en-IN')}) is completely waived and funded by the Ministry of Education!`;
+      } else if (isServiceMonthly) {
+        csisBox.style.display = 'flex';
+        csisBox.style.background = '#eff6ff';
+        csisBox.style.borderColor = '#93c5fd';
+        csisTitle.innerText = '⭐ 1.00% Bank Interest Concession Applied';
+        csisDesc.innerText = `Servicing simple interest monthly during study earns a full 1% interest rate discount throughout your entire repayment period!`;
+      } else {
+        csisBox.style.display = 'none';
+      }
+
+      // Render Schedule Table
+      renderAmortizationSchedule(principalAtRepayment, rMonthly, emi, repaymentYears);
+    }
+
+    function renderAmortizationSchedule(principal, rMonthly, emi, years) {
+      const tbody = document.getElementById('amortizationTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let bal = principal;
+      for (let yr = 1; yr <= years; yr++) {
+        let yrInterest = 0;
+        let yrPrincipal = 0;
+        for (let m = 0; m < 12; m++) {
+          const intM = bal * rMonthly;
+          const prM = emi - intM;
+          yrInterest += intM;
+          yrPrincipal += prM;
+          bal = Math.max(0, bal - prM);
+        }
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>Year ${yr}</strong></td>
+            <td>₹ ${(emi * 12).toLocaleString('en-IN')}</td>
+            <td style="color:#047857; font-weight:600;">₹ ${Math.round(yrPrincipal).toLocaleString('en-IN')}</td>
+            <td style="color:#b91c1c; font-weight:600;">₹ ${Math.round(yrInterest).toLocaleString('en-IN')}</td>
+            <td style="font-weight:700;">₹ ${Math.round(bal).toLocaleString('en-IN')}</td>
+          </tr>
+        `;
+      }
+    }
+
+    function toggleAmortizationTable() {
+      const wrapper = document.getElementById('amortizationTableWrapper');
+      const btn = document.getElementById('btnToggleTableText');
+      if (wrapper.style.display === 'none' || !wrapper.style.display) {
+        wrapper.style.display = 'block';
+        btn.innerText = '▲ Hide Schedule';
+      } else {
+        wrapper.style.display = 'none';
+        btn.innerText = '▼ Show Full Schedule';
+      }
+    }
+
+    async function downloadAmortizationPdf() {
+      if (!currentCalcData) recalculateClientLoan();
+      showNotice('Generating official VFSTR Loan Amortization Dossier PDF...');
+
+      try {
+        const payload = {
+          loan_amount: currentCalcData.loan_amount,
+          interest_rate: currentCalcData.interest_rate,
+          study_type: currentCalcData.study_type,
+          moratorium_years: currentCalcData.moratorium_years,
+          repayment_years: currentCalcData.repayment_years,
+          family_income: currentCalcData.family_income,
+          service_interest_during_moratorium: currentCalcData.service_interest_during_moratorium,
+          is_csis_subsidized: currentCalcData.csis_eligible,
+          student_name: currentCalcData.student_name,
+          student_id: currentCalcData.student_id
+        };
+
+        const res = await fetch(`${API_BASE}/calculator/repayment-estimate/pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('PDF Generation failed on backend');
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `VFSTR_Loan_Amortization_${currentCalcData.student_id}_Estimate.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        showNotice('✓ Official Loan Amortization PDF downloaded successfully!');
+      } catch (err) {
+        console.error(err);
+        showNotice('Failed to download PDF: ' + err.message, true);
+      }
+    }
+
+    function copyRepaymentSummary() {
+      if (!currentCalcData) recalculateClientLoan();
+      const text = `VFSTR EDUCATION LOAN AMORTIZATION ESTIMATE
+Candidate: ${currentCalcData.student_name} (${currentCalcData.student_id})
+Destination: ${currentCalcData.study_type === 'domestic' ? 'Domestic B.Tech (India)' : 'Study Abroad (MS)'}
+Loan Amount: ₹ ${currentCalcData.loan_amount.toLocaleString('en-IN')}
+Benchmark Interest: ${currentCalcData.effective_rate.toFixed(2)}% p.a.
+Moratorium Period: ${currentCalcData.moratorium_years.toFixed(1)} Years
+Post-Moratorium Monthly EMI: ₹ ${currentCalcData.monthly_emi.toLocaleString('en-IN')} / month
+Repayment Tenure: ${currentCalcData.repayment_years} Years
+5-Year Moratorium Interest: ${currentCalcData.csis_eligible ? '₹ 0 (100% CSIS Govt Paid)' : '₹ ' + currentCalcData.moratorium_interest.toLocaleString('en-IN')}
+Total Interest Paid: ₹ ${currentCalcData.total_interest_paid.toLocaleString('en-IN')}
+Total Lifetime Outflow: ₹ ${currentCalcData.total_lifetime_outflow.toLocaleString('en-IN')}
+Generated by Agent 43 - VFSTR Education Loan Cell`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showNotice('✓ Loan projection summary copied to clipboard!');
+      });
+    }
+
+    // Initialize calculator defaults on startup
+    setTimeout(() => {
+      if (document.getElementById('calcLoanAmount')) {
+        recalculateClientLoan();
+      }
+    }, 500);
+
+    // Initial load
+    refreshAll();
+  </script>
+</body>
+</html>

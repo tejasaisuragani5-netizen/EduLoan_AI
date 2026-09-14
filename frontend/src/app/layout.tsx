@@ -1,8 +1,6 @@
-import "../styles/globals.css";
-
 export const metadata = {
-  title: "Vignan Foundation for Science, Technology & Research - Loan Verification",
-  description: "Vignan Foundation for Science and Technology - Education Loan Support & AI Verification",
+  title: "Vignan University · Agent 43 Education Loan Support Portal",
+  description: "VFSTR Institutional Portal - Official Documentation and Accounts Coordination System",
 };
 
 export default function RootLayout({
@@ -11,8 +9,10 @@ export default function RootLayout({
   children: React.ReactNode;
 }>) {
   return (
-    <html lang="en">
-      <body>{children}</body>
+    <html lang="en" style={{ margin: 0, padding: 0, height: "100%", width: "100%" }}>
+      <body style={{ margin: 0, padding: 0, height: "100%", width: "100%", overflow: "hidden" }}>
+        {children}
+      </body>
     </html>
   );
 }
