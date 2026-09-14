@@ -315,7 +315,25 @@ def create_tables():
                 None,
                 req_id
             ))
-    except Exception as e:
+    except Exception:
+        pass
+
+    # Ensure default real students are seeded if table is empty
+    try:
+        cur = connection.execute("SELECT COUNT(*) FROM students")
+        if cur.fetchone()[0] == 0:
+            real_students = [
+                ("261FA04001", "Tejasai", "B.Tech CSE", "1st Year", "2026", 2000000.0, "Approved", "None", 0.0),
+                ("241FA04195", "K. Jagadeesh", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
+                ("241FA04202", "N. Yasaswi", "B.Tech CSE", "3rd Year", "2024", 5000000.0, "Approved", "None", 0.0),
+            ]
+            connection.executemany("""
+                INSERT OR IGNORE INTO students (
+                    student_id, name, course, year, admission_year, total_fee,
+                    loan_status, current_hold_status, current_hold_amount
+                ) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)
+            """, real_students)
+    except Exception:
         pass
 
     connection.commit()
