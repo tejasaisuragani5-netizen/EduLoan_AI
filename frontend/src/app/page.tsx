@@ -75,7 +75,8 @@ type ReportSummary = {
 type TurnaroundStat = {
   document_type: string;
   count: number;
-  average_days: number;
+  average_days?: number;
+  average_hours?: number;
 };
 
 
