@@ -2,7 +2,10 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=5.0, viewport-fit=cover">
+  <meta name="theme-color" content="#172554">
+  <meta name="mobile-web-app-capable" content="yes">
+  <meta name="apple-mobile-web-app-status-bar-style" content="black-translucent">
   <title>Vignan University · Agent 43 Education Loan Support Portal</title>
   <link rel="stylesheet" href="globals.css">
   <style>
@@ -313,8 +316,11 @@
   <div class="portal-container">
     <!-- TOPBAR -->
     <header class="vignan-top-navbar">
+      <button type="button" class="mobile-menu-toggle-btn" onclick="toggleMobileMenu()" aria-label="Toggle Navigation Menu">
+        <span>☰</span>
+      </button>
       <div class="vignan-logo-container">
-        <img src="vignan-logo.png" alt="Vignan University Logo" style="height: 60px; max-width: 320px; object-fit: contain; display: block;">
+        <img src="vignan-logo.png" alt="Vignan University Logo" class="vignan-logo-img" style="object-fit: contain; display: block;">
       </div>
       <div class="topbar-center-agent">
         <div class="agent-radar-badge"><span class="pulse-dot"></span>AGENT 43 · EDUCATION LOAN SUPPORT</div>
@@ -354,10 +360,29 @@
       </div>
     </div>
 
+    <!-- STICKY MOBILE QUICK-TAB STRIP -->
+    <nav id="mobileNavStrip" class="mobile-nav-strip" aria-label="Mobile Navigation">
+      <button type="button" class="mobile-nav-btn active" data-tab="Dashboard" onclick="switchTab('Dashboard')"><span>📊</span> Dashboard</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Eligibility Analyzer" onclick="switchTab('Eligibility Analyzer')"><span>🎓</span> Eligibility</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Loan Calculator" onclick="switchTab('Loan Calculator')"><span>🧮</span> Calculator</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Students" onclick="switchTab('Students')"><span>👥</span> Students</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Document Requests" onclick="switchTab('Document Requests')"><span>📑</span> Requests</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Bank Schemes" onclick="switchTab('Bank Schemes')"><span>🏦</span> Schemes</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Bank Verification" onclick="switchTab('Bank Verification')"><span>🔍</span> Direct Verify</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Disbursement" onclick="switchTab('Disbursement')"><span>💰</span> Disbursed</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Reports" onclick="switchTab('Reports')"><span>📈</span> Reports</button>
+      <button type="button" class="mobile-nav-btn" data-tab="Info Desk" onclick="switchTab('Info Desk')"><span>🤖</span> Info Desk</button>
+    </nav>
+    <div id="mobileDrawerBackdrop" class="mobile-drawer-backdrop" onclick="closeMobileMenu()"></div>
+
     <!-- MAIN WRAPPER -->
     <div class="app">
       <!-- SIDEBAR -->
       <aside class="sidebar">
+        <div class="mobile-sidebar-close-row">
+          <span style="font-weight:700; font-size:13px; color:#93c5fd; letter-spacing:0.5px;">NAVIGATION MENU</span>
+          <button type="button" class="mobile-drawer-close-btn" onclick="closeMobileMenu()" aria-label="Close Menu">✕</button>
+        </div>
         <div class="sidebar-agent-header">
           <div class="agent-icon-box">🛡️</div>
           <div class="agent-sidebar-title">
@@ -1252,15 +1277,49 @@
       summary: null
     };
 
+    function toggleMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (!sidebar) return;
+      const isOpen = sidebar.classList.toggle('mobile-open');
+      if (backdrop) backdrop.classList.toggle('active', isOpen);
+      document.body.style.overflow = isOpen ? 'hidden' : '';
+    }
+
+    function closeMobileMenu() {
+      const sidebar = document.querySelector('.sidebar');
+      const backdrop = document.getElementById('mobileDrawerBackdrop');
+      if (sidebar) sidebar.classList.remove('mobile-open');
+      if (backdrop) backdrop.classList.remove('active');
+      document.body.style.overflow = '';
+    }
+
     function switchTab(page) {
       document.querySelectorAll('#sideNav .nav-item').forEach(btn => {
         btn.classList.toggle('active', btn.innerText.includes(page));
+      });
+      document.querySelectorAll('#mobileNavStrip .mobile-nav-btn').forEach(btn => {
+        btn.classList.toggle('active', btn.innerText.includes(page) || btn.dataset.tab === page);
       });
       document.querySelectorAll('main > section').forEach(sec => {
         sec.classList.add('hidden');
       });
       const target = document.getElementById('page-' + page);
       if (target) target.classList.remove('hidden');
+
+      closeMobileMenu();
+
+      const activeMobBtn = document.querySelector('#mobileNavStrip .mobile-nav-btn.active');
+      if (activeMobBtn) {
+        activeMobBtn.scrollIntoView({ behavior: 'smooth', inline: 'center', block: 'nearest' });
+      }
+
+      if (window.innerWidth <= 900) {
+        const mainEl = document.querySelector('.main');
+        if (mainEl) {
+          window.scrollTo({ top: mainEl.offsetTop - 50, behavior: 'smooth' });
+        }
+      }
     }
 
     function showNotice(msg, isError = false) {
