@@ -2944,6 +2944,110 @@ def build_eligibility_dossier_pdf(file_path, student, eval_data):
     pdf.save()
 
 
+def synthesize_cross_document_identity(
+    audited_docs: list,
+    student_dict: dict,
+    target_loan_amount: float
+) -> tuple:
+    """
+    Agent 43 Multi-Stage Cross-Document Identity & Parameter Synthesis Engine.
+    Cross-compares all uploaded certificate forensic OCR extractions, barcodes,
+    and visual attributes across 5 critical dimensions:
+    1. Cross-Document Student Name Consistency
+    2. Register Number / Alphanumeric ID Consistency
+    3. Academic Program / Degree Specialization Consistency
+    4. Tuition Fee & Loan Amount Cross-Reconciliation
+    5. Visual Forensic Integrity (Seals, Layout, Tampering)
+    """
+    discrepancies = []
+    clean_sid = student_dict["student_id"].strip().upper()
+    expected_name = student_dict["name"].strip().upper()
+    name_tokens = [t for t in re.findall(r"[A-Z]{2,}", expected_name) if len(t) > 2]
+    expected_course = student_dict["course"].strip().upper()
+
+    for doc in audited_docs:
+        doc_type = doc["doc_type"]
+        ocr = doc.get("extracted_text", "").upper()
+        verdict = doc.get("verdict", "REVIEW")
+        scorecard = doc.get("scorecard", [])
+
+        # Dimension 1: Student Name Consistency
+        if len(ocr) > 20:
+            name_found = any(tok in ocr for tok in name_tokens)
+            if not name_found and any(k in doc_type for k in ("Bonafide", "Admission", "Marksheet")):
+                discrepancies.append({
+                    "dimension": "Student Name Consistency",
+                    "severity": "CRITICAL",
+                    "doc_type": doc_type,
+                    "message": f"Expected student name '{student_dict['name']}' was not detected in {doc_type} text."
+                })
+
+        # Dimension 2: Register Number Consistency (detect other student IDs!)
+        raw_matches = re.findall(r"2[0-9]{2}\s*FA\s*[0-9]{5}", ocr, flags=re.IGNORECASE)
+        found_ids = set(re.sub(r"\s+", "", fid).upper() for fid in raw_matches)
+        for fid in found_ids:
+            if fid != clean_sid:
+                discrepancies.append({
+                    "dimension": "Register Number Consistency",
+                    "severity": "CRITICAL",
+                    "doc_type": doc_type,
+                    "message": f"Conflicting student ID '{fid}' detected in {doc_type} (expected '{clean_sid}'). Cross-student document mixing suspected."
+                })
+
+        # Dimension 3: Academic Program / Course Consistency
+        if len(ocr) > 30:
+            incompatible_courses = {
+                "PHARMACY": ["B.PHARMACY", "PHARM.D", "M.PHARM"],
+                "MANAGEMENT": ["MBA", "BBA"],
+                "LAW": ["LLB", "BA.LLB"],
+                "AGRICULTURE": ["B.SC AGRI", "AGRICULTURE"]
+            }
+            curr_category = "ENGINEERING" if "B.TECH" in expected_course or "M.TECH" in expected_course else "OTHER"
+            if curr_category == "ENGINEERING":
+                for cat, terms in incompatible_courses.items():
+                    for term in terms:
+                        if term in ocr and "B.TECH" not in ocr:
+                            discrepancies.append({
+                                "dimension": "Academic Program Consistency",
+                                "severity": "HIGH",
+                                "doc_type": doc_type,
+                                "message": f"Contradictory program '{term}' detected in {doc_type} (registered program is '{student_dict['course']}')."
+                            })
+                            break
+
+        # Dimension 5: Forensic Integrity & Tampering
+        if verdict == "REJECTED":
+            discrepancies.append({
+                "dimension": "Visual Forensic Integrity",
+                "severity": "CRITICAL",
+                "doc_type": doc_type,
+                "message": f"{doc_type} failed forensic authenticity inspection: {doc.get('reason', 'Verification rejected')}."
+            })
+        elif any(item.get("label") == "Tampering Indicators" and item.get("status") == "fail" for item in scorecard):
+            discrepancies.append({
+                "dimension": "Tampering & Alteration",
+                "severity": "CRITICAL",
+                "doc_type": doc_type,
+                "message": f"Tampering indicators or digital editing artifacts flagged in {doc_type}."
+            })
+
+    # Dimension 4: Tuition Fee Reconciliation
+    approved_fee = student_dict.get("total_fee", 0.0)
+    if target_loan_amount > 0 and approved_fee > 0:
+        if target_loan_amount > (approved_fee * 1.5):
+            discrepancies.append({
+                "dimension": "Tuition Fee Reconciliation",
+                "severity": "MEDIUM",
+                "doc_type": "Loan Application",
+                "message": f"Requested loan amount (Rs. {target_loan_amount:,.2f}) significantly exceeds approved institutional fee ledger (Rs. {approved_fee:,.2f}). Surplus documentation required."
+            })
+
+    critical_count = sum(1 for d in discrepancies if d.get("severity") == "CRITICAL")
+    cross_identity_passed = (critical_count == 0)
+
+    return cross_identity_passed, discrepancies
+
+
 @app.post("/verification/bundle-eligibility")
 async def analyze_bundle_eligibility(
     student_id: str = Form(...),
@@ -3027,9 +3131,57 @@ async def analyze_bundle_eligibility(
         )
 
     student_name = student_dict["name"]
-    cross_identity_passed = True
-    discrepancies = []
+    target_amount = target_loan_amount if target_loan_amount > 0 else (student_dict.get("total_fee") or 200000.0)
+    income = family_income if family_income > 0 else 300000.0
 
+    # 1. Execute Full Multimodal AI Forensic Verification on Every Uploaded Certificate
+    audited_docs = []
+    for d in uploaded_docs:
+        doc_path = d["file_path"]
+        doc_type = d["doc_type"]
+        with open(doc_path, "rb") as f_in:
+            doc_bytes = f_in.read()
+
+        ext = os.path.splitext(d["filename"])[1].lower()
+        if ext == ".png":
+            m_type = "image/png"
+        elif ext == ".webp":
+            m_type = "image/webp"
+        elif ext == ".pdf":
+            m_type = "application/pdf"
+        else:
+            m_type = "image/jpeg"
+
+        ai_res = call_gemini_document_agent(
+            doc_bytes,
+            m_type,
+            doc_type,
+            clean_sid,
+            student_dict
+        )
+
+        audited_docs.append({
+            "doc_type": doc_type,
+            "filename": d["filename"],
+            "file_path": doc_path,
+            "size_bytes": d["size_bytes"],
+            "verdict": ai_res.get("verdict", "REVIEW"),
+            "confidence": ai_res.get("confidence", 85.0),
+            "reason": ai_res.get("reason", ""),
+            "extracted_text": ai_res.get("extracted_text", ""),
+            "scorecard": ai_res.get("scorecard", []),
+            "barcode_info": ai_res.get("barcode_info")
+        })
+
+    # 2. Execute True Cross-Document Identity Synthesis across All Certificates
+    cross_identity_passed, discrepancies_list = synthesize_cross_document_identity(
+        audited_docs,
+        student_dict,
+        target_amount
+    )
+    discrepancies = [d["message"] if isinstance(d, dict) else str(d) for d in discrepancies_list]
+
+    # 3. Dynamic Forensic Checklist Generation
     checklist = []
     for doc_name in [
         "Bonafide Certificate",
@@ -3038,23 +3190,40 @@ async def analyze_bundle_eligibility(
         "Academic Status / Marksheet",
         "Fee Paid Statement / Receipt"
     ]:
-        matched = any(doc_name.lower() in d["doc_type"].lower() or d["doc_type"].lower() in doc_name.lower() for d in uploaded_docs)
-        if matched:
+        matched_audit = next(
+            (a for a in audited_docs if doc_name.lower() in a["doc_type"].lower() or a["doc_type"].lower() in doc_name.lower()),
+            None
+        )
+        if matched_audit:
+            audit_verdict = matched_audit.get("verdict", "REVIEW")
+            doc_disc = [d["message"] for d in discrepancies_list if d.get("doc_type") == matched_audit["doc_type"]]
+            if audit_verdict == "VERIFIED" and not doc_disc:
+                status = "VERIFIED"
+                notes = f"Forensically authenticated by AI (Confidence: {matched_audit.get('confidence', 95):.0f}%)"
+            elif doc_disc:
+                status = "FLAGGED"
+                notes = f"DISCREPANCY: {doc_disc[0]}"
+            elif audit_verdict == "REJECTED":
+                status = "REJECTED"
+                notes = f"REJECTED: {matched_audit.get('reason', 'Forensic check failed')}"
+            else:
+                status = "REVIEW"
+                notes = f"MANUAL REVIEW: {matched_audit.get('reason', 'Inspection required')}"
             checklist.append({
                 "name": doc_name,
-                "status": "VERIFIED",
-                "notes": "Authentic institutional certificate provided"
+                "status": status,
+                "notes": notes,
+                "confidence": matched_audit.get("confidence", 90.0)
             })
         else:
             checklist.append({
                 "name": doc_name,
                 "status": "MISSING",
-                "notes": "Required by banks for complete loan file appraisal"
+                "notes": "Required by banks for complete loan file appraisal",
+                "confidence": 0.0
             })
 
     verified_count = sum(1 for c in checklist if c["status"] == "VERIFIED")
-    target_amount = target_loan_amount if target_loan_amount > 0 else (student_dict.get("total_fee") or 200000.0)
-    income = family_income if family_income > 0 else 300000.0
 
     # 1. Vidya Lakshmi Portal CELC readiness
     has_core_3 = any("Bonafide" in d["doc_type"] for d in uploaded_docs) and \
@@ -3083,17 +3252,29 @@ async def analyze_bundle_eligibility(
     sbi_status = "ELIGIBLE UP TO Rs. 20.00 LAKHS"
     sbi_notes = "VFSTR Deemed University is listed under premier institutions. 0% margin money applies up to Rs. 20 Lakhs."
 
-    # Overall Verdict and Score
-    if verified_count >= 3 and cross_identity_passed:
-        overall_verdict = "ELIGIBLE & BANK-READY"
-        score = min(100.0, 75.0 + (verified_count * 5.0))
+    # Overall Verdict and Score based on Cross-Document Identity and Forensic Findings
+    critical_count = sum(1 for d in discrepancies_list if d.get("severity") == "CRITICAL")
+    high_count = sum(1 for d in discrepancies_list if d.get("severity") == "HIGH")
+
+    if critical_count > 0:
+        overall_verdict = "REJECTED / HIGH RISK (CROSS-DOCUMENT IDENTITY MISMATCH)"
+        score = max(15.0, 50.0 - (critical_count * 20.0))
+    elif high_count > 0 or any(c["status"] == "FLAGGED" for c in checklist):
+        overall_verdict = "MANUAL REVIEW REQUIRED (CROSS-DOCUMENT DISCREPANCY)"
+        score = max(35.0, 65.0 - (high_count * 10.0))
+    elif any(c["status"] == "REVIEW" for c in checklist):
+        overall_verdict = "CONDITIONALLY ELIGIBLE (MANUAL AUDIT REQUIRED)"
+        score = 60.0 + (verified_count * 5.0)
+    elif verified_count >= 3 and cross_identity_passed:
+        overall_verdict = "ELIGIBLE & BANK-READY (CROSS-DOCUMENT AUTHENTICATED)"
+        score = min(100.0, 78.0 + (verified_count * 4.4))
     elif verified_count >= 1:
         overall_verdict = "CONDITIONALLY ELIGIBLE (INCOMPLETE DOCUMENTATION)"
-        score = 50.0 + (verified_count * 8.0)
+        score = 50.0 + (verified_count * 7.0)
         discrepancies.append("Some standard institutional certificates are missing from this upload bundle.")
     else:
         overall_verdict = "INCOMPLETE BUNDLE"
-        score = 40.0
+        score = 30.0
         discrepancies.append("Mandatory institutional loan certificates have not been provided.")
 
     dossier_pdf_name = f"Loan_Eligibility_Dossier_{clean_sid}_{timestamp}.pdf"
@@ -3159,8 +3340,31 @@ async def analyze_bundle_eligibility(
             "passed": cross_identity_passed,
             "student_name": student_name,
             "student_id": clean_sid,
-            "notes": f"Identity verified against VFSTR registry for {student_name} ({clean_sid})."
+            "dimensions_checked": [
+                "Cross-Document Student Name Consistency",
+                "Register Number / Alphanumeric ID Consistency",
+                "Academic Program / Degree Consistency",
+                "Tuition Fee & Loan Amount Reconciliation",
+                "Visual Forensic Integrity & Tampering"
+            ],
+            "discrepancies_count": len(discrepancies),
+            "notes": (
+                f"Identity verified and reconciled across all uploaded documents for {student_name} ({clean_sid})."
+                if cross_identity_passed else
+                f"Cross-document identity conflicts detected: {discrepancies[0] if discrepancies else 'Mismatched records'}"
+            )
         },
+        "audited_documents": [
+            {
+                "doc_type": a["doc_type"],
+                "filename": a["filename"],
+                "verdict": a["verdict"],
+                "confidence": a["confidence"],
+                "reason": a["reason"],
+                "scorecard": a["scorecard"]
+            }
+            for a in audited_docs
+        ],
         "checklist": checklist,
         "scheme_eligibility": scheme_eligibility_data,
         "discrepancies": discrepancies,
