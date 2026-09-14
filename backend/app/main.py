@@ -3701,6 +3701,370 @@ def agent43_ai_query(payload: Agent43Query):
     }
 
 
+# =========================================================
+# WORKFLOW 10: EDUCATION LOAN & 5-YEAR MORATORIUM CALCULATOR
+# =========================================================
+
+class RepaymentEstimateRequest(BaseModel):
+    loan_amount: float
+    interest_rate: float = 9.5
+    study_type: str = "domestic"
+    moratorium_years: float = 5.0
+    repayment_years: float = 10.0
+    family_income: float = 0.0
+    service_interest_during_moratorium: bool = False
+    is_csis_subsidized: bool = False
+    student_name: str = "Student"
+    student_id: str = "N/A"
+
+
+def calculate_repayment_data(
+    loan_amount: float,
+    interest_rate: float,
+    study_type: str = "domestic",
+    moratorium_years: float = 5.0,
+    repayment_years: float = 10.0,
+    family_income: float = 0.0,
+    service_interest_during_moratorium: bool = False,
+    is_csis_subsidized: bool = False,
+    student_name: str = "Student",
+    student_id: str = "N/A"
+):
+    csis_eligible = (study_type.lower() == "domestic") and ((family_income > 0 and family_income <= 450000.0) or is_csis_subsidized)
+    effective_rate = interest_rate
+    if service_interest_during_moratorium and effective_rate > 1.0:
+        effective_rate -= 1.0
+        
+    r_monthly = (effective_rate / 100.0) / 12.0
+    n_months = int(repayment_years * 12)
+    simple_moratorium_interest = round(loan_amount * (interest_rate / 100.0) * moratorium_years, 2)
+    
+    if csis_eligible:
+        moratorium_interest_student_pays = 0.0
+        csis_govt_subsidy_amount = simple_moratorium_interest
+        moratorium_monthly_payment = 0.0
+        principal_at_repayment = loan_amount
+    elif service_interest_during_moratorium:
+        moratorium_interest_student_pays = simple_moratorium_interest
+        csis_govt_subsidy_amount = 0.0
+        moratorium_monthly_payment = round(simple_moratorium_interest / (moratorium_years * 12), 2)
+        principal_at_repayment = loan_amount
+    else:
+        moratorium_interest_student_pays = simple_moratorium_interest
+        csis_govt_subsidy_amount = 0.0
+        moratorium_monthly_payment = 0.0
+        principal_at_repayment = round(loan_amount + simple_moratorium_interest, 2)
+        
+    if r_monthly > 0 and n_months > 0:
+        emi = round((principal_at_repayment * r_monthly * ((1 + r_monthly)**n_months)) / (((1 + r_monthly)**n_months) - 1), 2)
+    else:
+        emi = round(principal_at_repayment / max(1, n_months), 2)
+        
+    total_repayment_paid = round(emi * n_months, 2)
+    repayment_phase_interest = round(total_repayment_paid - principal_at_repayment, 2)
+    total_interest_paid_by_student = round(moratorium_interest_student_pays + repayment_phase_interest, 2)
+    total_lifetime_cashflow = round(loan_amount + total_interest_paid_by_student, 2)
+    tax_80e_deductible_interest = min(total_interest_paid_by_student, round(repayment_phase_interest * min(1.0, 8.0 / max(1.0, repayment_years)), 2))
+    estimated_tax_savings_80e = round(tax_80e_deductible_interest * 0.208, 2)
+    
+    schedule = []
+    bal = principal_at_repayment
+    for yr in range(1, int(repayment_years) + 1):
+        interest_yr = 0.0
+        principal_yr = 0.0
+        for _ in range(12):
+            int_m = bal * r_monthly
+            pr_m = emi - int_m
+            interest_yr += int_m
+            principal_yr += pr_m
+            bal = max(0.0, bal - pr_m)
+        schedule.append({
+            "year": yr,
+            "annual_payment": round(emi * 12, 2),
+            "principal_paid": round(principal_yr, 2),
+            "interest_paid": round(interest_yr, 2),
+            "balance_remaining": round(bal, 2)
+        })
+        
+    return {
+        "student_name": student_name,
+        "student_id": student_id,
+        "study_type": study_type,
+        "loan_amount": loan_amount,
+        "interest_rate_original": interest_rate,
+        "effective_interest_rate": effective_rate,
+        "moratorium_years": moratorium_years,
+        "repayment_years": repayment_years,
+        "repayment_months": n_months,
+        "family_income": family_income,
+        "csis_eligible": csis_eligible,
+        "service_interest_during_moratorium": service_interest_during_moratorium,
+        "moratorium_interest": simple_moratorium_interest,
+        "moratorium_interest_student_pays": moratorium_interest_student_pays,
+        "csis_govt_subsidy_amount": csis_govt_subsidy_amount,
+        "moratorium_monthly_payment": moratorium_monthly_payment,
+        "principal_at_repayment": principal_at_repayment,
+        "monthly_emi": emi,
+        "total_repayment_paid": total_repayment_paid,
+        "repayment_phase_interest": repayment_phase_interest,
+        "total_interest_paid_by_student": total_interest_paid_by_student,
+        "total_lifetime_cashflow": total_lifetime_cashflow,
+        "estimated_tax_savings_80e": estimated_tax_savings_80e,
+        "schedule": schedule
+    }
+
+
+def build_repayment_estimate_pdf(file_path: str, d: dict):
+    os.makedirs(os.path.dirname(os.path.abspath(file_path)), exist_ok=True)
+    page_width, page_height = A4
+    pdf = canvas.Canvas(file_path, pagesize=A4)
+
+    # Outer decorative borders
+    pdf.setStrokeColor(colors.HexColor("#1E3A8A"))
+    pdf.setLineWidth(2)
+    pdf.rect(15 * mm, 15 * mm, page_width - 30 * mm, page_height - 30 * mm)
+
+    pdf.setStrokeColor(colors.HexColor("#D97706"))
+    pdf.setLineWidth(0.8)
+    pdf.rect(17 * mm, 17 * mm, page_width - 34 * mm, page_height - 34 * mm)
+
+    # University Header
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.drawCentredString(page_width / 2, page_height - 26 * mm, "VIGNAN'S FOUNDATION FOR SCIENCE, TECHNOLOGY AND RESEARCH")
+
+    pdf.setFillColor(colors.HexColor("#475569"))
+    pdf.setFont("Helvetica", 7.5)
+    pdf.drawCentredString(page_width / 2, page_height - 30.5 * mm, "(Deemed to be University u/s 3 of UGC Act 1956) · Vadlamudi, Guntur - 522213, AP")
+    pdf.drawCentredString(page_width / 2, page_height - 34.5 * mm, "NAAC A+ Accredited · UGC Category-1 Deemed University · NIRF Ranked")
+
+    # Title Banner
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.rect(20 * mm, page_height - 44 * mm, page_width - 40 * mm, 7 * mm, fill=1, stroke=0)
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 9)
+    pdf.drawCentredString(page_width / 2, page_height - 39.5 * mm, "OFFICIAL EDUCATION LOAN AMORTIZATION & 5-YEAR MORATORIUM SCHEDULE")
+
+    pdf.setFillColor(colors.HexColor("#0F172A"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    pdf.drawCentredString(page_width / 2, page_height - 48.5 * mm, "INSTITUTIONAL REFERENCE PROJECTION FOR STUDENT & BANK CREDIT APPRAISAL")
+
+    # Parameter Box
+    box_y = page_height - 76 * mm
+    pdf.setStrokeColor(colors.HexColor("#CBD5E1"))
+    pdf.setFillColor(colors.HexColor("#F8FAFC"))
+    pdf.rect(20 * mm, box_y, page_width - 40 * mm, 24 * mm, fill=1, stroke=1)
+
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(24 * mm, box_y + 18.5 * mm, "LOAN APPLICANT & COURSE PARAMETERS")
+
+    pdf.setFillColor(colors.HexColor("#334155"))
+    pdf.setFont("Helvetica", 7.5)
+    pdf.drawString(24 * mm, box_y + 13.5 * mm, f"Student: {d['student_name']} (Reg: {d['student_id']})")
+    dest_str = "Domestic B.Tech (VFSTR Campus, India)" if d['study_type'] == "domestic" else "Study Abroad (International MS/Master's Program)"
+    pdf.drawString(24 * mm, box_y + 8.5 * mm, f"Program Type: {dest_str}")
+    pdf.drawString(24 * mm, box_y + 3.5 * mm, f"Sanctioned Loan Principal: Rs. {d['loan_amount']:,.2f}")
+
+    pdf.drawString(108 * mm, box_y + 13.5 * mm, f"Benchmark Interest Rate: {d['effective_interest_rate']:.2f}% p.a.")
+    pdf.drawString(108 * mm, box_y + 8.5 * mm, f"Moratorium: {d['moratorium_years']:.0f} Yrs (Course + 1 Yr Grace)")
+    pdf.drawString(108 * mm, box_y + 3.5 * mm, f"Repayment Tenure: {d['repayment_years']:.0f} Yrs ({d['repayment_months']} Months)")
+
+    # Key Repayment KPIs Banner (3 columns)
+    kpi_y = page_height - 105 * mm
+    kpi_w = (page_width - 40 * mm - 8 * mm) / 3
+
+    # Box 1: Monthly EMI
+    pdf.setFillColor(colors.HexColor("#ECFDF5"))
+    pdf.setStrokeColor(colors.HexColor("#10B981"))
+    pdf.rect(20 * mm, kpi_y, kpi_w, 24 * mm, fill=1, stroke=1)
+    pdf.setFillColor(colors.HexColor("#065F46"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    pdf.drawString(23 * mm, kpi_y + 18 * mm, "POST-MORATORIUM MONTHLY EMI")
+    pdf.setFont("Helvetica-Bold", 13)
+    pdf.setFillColor(colors.HexColor("#047857"))
+    pdf.drawString(23 * mm, kpi_y + 8 * mm, f"Rs. {d['monthly_emi']:,.0f}")
+    pdf.setFont("Helvetica", 6.5)
+    pdf.setFillColor(colors.HexColor("#065F46"))
+    pdf.drawString(23 * mm, kpi_y + 3 * mm, f"Payable for {d['repayment_months']} months")
+
+    # Box 2: Moratorium Interest
+    pdf.setFillColor(colors.HexColor("#FEF3C7"))
+    pdf.setStrokeColor(colors.HexColor("#F59E0B"))
+    pdf.rect(20 * mm + kpi_w + 4 * mm, kpi_y, kpi_w, 24 * mm, fill=1, stroke=1)
+    pdf.setFillColor(colors.HexColor("#92400E"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    pdf.drawString(20 * mm + kpi_w + 7 * mm, kpi_y + 18 * mm, "5-YR MORATORIUM INTEREST")
+    pdf.setFont("Helvetica-Bold", 12)
+    if d['csis_eligible']:
+        pdf.setFillColor(colors.HexColor("#059669"))
+        pdf.drawString(20 * mm + kpi_w + 7 * mm, kpi_y + 8 * mm, "Rs. 0 (GOVT PAID)")
+        pdf.setFont("Helvetica-Bold", 6.5)
+        pdf.drawString(20 * mm + kpi_w + 7 * mm, kpi_y + 3 * mm, f"Saved Rs. {d['csis_govt_subsidy_amount']:,.0f} via CSIS")
+    else:
+        pdf.setFillColor(colors.HexColor("#B45309"))
+        pdf.drawString(20 * mm + kpi_w + 7 * mm, kpi_y + 8 * mm, f"Rs. {d['moratorium_interest']:,.0f}")
+        pdf.setFont("Helvetica", 6.5)
+        pdf.drawString(20 * mm + kpi_w + 7 * mm, kpi_y + 3 * mm, f"Principal at start: Rs. {d['principal_at_repayment']:,.0f}")
+
+    # Box 3: Total Interest Paid
+    pdf.setFillColor(colors.HexColor("#EFF6FF"))
+    pdf.setStrokeColor(colors.HexColor("#3B82F6"))
+    pdf.rect(20 * mm + 2 * (kpi_w + 4 * mm), kpi_y, kpi_w, 24 * mm, fill=1, stroke=1)
+    pdf.setFillColor(colors.HexColor("#1E40AF"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    pdf.drawString(20 * mm + 2 * (kpi_w + 4 * mm) + 3 * mm, kpi_y + 18 * mm, "TOTAL INTEREST OUTFLOW")
+    pdf.setFont("Helvetica-Bold", 12)
+    pdf.setFillColor(colors.HexColor("#1D4ED8"))
+    pdf.drawString(20 * mm + 2 * (kpi_w + 4 * mm) + 3 * mm, kpi_y + 8 * mm, f"Rs. {d['total_interest_paid_by_student']:,.0f}")
+    pdf.setFont("Helvetica", 6.5)
+    pdf.setFillColor(colors.HexColor("#1E40AF"))
+    pdf.drawString(20 * mm + 2 * (kpi_w + 4 * mm) + 3 * mm, kpi_y + 3 * mm, f"Lifetime Outflow: Rs. {d['total_lifetime_cashflow']:,.0f}")
+
+    # Special Scheme Status Row
+    scheme_y = page_height - 117 * mm
+    pdf.setFillColor(colors.HexColor("#F1F5F9"))
+    pdf.rect(20 * mm, scheme_y, page_width - 40 * mm, 8 * mm, fill=1, stroke=0)
+    pdf.setFillColor(colors.HexColor("#0F172A"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    if d['csis_eligible']:
+        pdf.drawString(24 * mm, scheme_y + 2.5 * mm, "★ CSIS / PM-USP SUBSIDY: QUALIFIED (100% Moratorium Interest Waived by Govt of India MoE)")
+    elif d['service_interest_during_moratorium']:
+        pdf.drawString(24 * mm, scheme_y + 2.5 * mm, "★ IN-STUDY INTEREST SERVICED: 1.00% Interest Concession Applied by Lending Bank")
+    else:
+        pdf.drawString(24 * mm, scheme_y + 2.5 * mm, f"★ SEC 80E TAX BENEFIT: Up to Rs. {d['estimated_tax_savings_80e']:,.0f} Estimated Tax Savings over 8 Years")
+
+    # Amortization Table
+    tab_y = page_height - 128 * mm
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.setFont("Helvetica-Bold", 8)
+    pdf.drawString(20 * mm, tab_y, "ANNUAL REPAYMENT AMORTIZATION SCHEDULE (Post 5-Year Moratorium)")
+
+    t_top = tab_y - 4 * mm
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.rect(20 * mm, t_top - 5 * mm, page_width - 40 * mm, 5 * mm, fill=1, stroke=0)
+    pdf.setFillColor(colors.white)
+    pdf.setFont("Helvetica-Bold", 7)
+    pdf.drawString(22 * mm, t_top - 3.5 * mm, "Year")
+    pdf.drawString(45 * mm, t_top - 3.5 * mm, "Annual EMI Paid (Rs.)")
+    pdf.drawString(80 * mm, t_top - 3.5 * mm, "Principal Repaid (Rs.)")
+    pdf.drawString(118 * mm, t_top - 3.5 * mm, "Interest Paid (Rs.)")
+    pdf.drawString(155 * mm, t_top - 3.5 * mm, "Ending Balance (Rs.)")
+
+    row_y = t_top - 5 * mm
+    for idx, s in enumerate(d['schedule'][:10]):
+        row_y -= 4.2 * mm
+        bg = colors.HexColor("#F8FAFC") if idx % 2 == 0 else colors.white
+        pdf.setFillColor(bg)
+        pdf.rect(20 * mm, row_y, page_width - 40 * mm, 4.2 * mm, fill=1, stroke=0)
+
+        pdf.setFillColor(colors.HexColor("#334155"))
+        pdf.setFont("Helvetica", 6.8)
+        pdf.drawString(22 * mm, row_y + 1.2 * mm, f"Year {s['year']}")
+        pdf.drawString(45 * mm, row_y + 1.2 * mm, f"Rs. {s['annual_payment']:,.0f}")
+        pdf.drawString(80 * mm, row_y + 1.2 * mm, f"Rs. {s['principal_paid']:,.0f}")
+        pdf.drawString(118 * mm, row_y + 1.2 * mm, f"Rs. {s['interest_paid']:,.0f}")
+        pdf.drawString(155 * mm, row_y + 1.2 * mm, f"Rs. {s['balance_remaining']:,.0f}")
+
+    # VFSTR Circular Stamp & Signatures
+    foot_y = 22 * mm
+    stamp_x = 42 * mm
+    stamp_y = foot_y + 15 * mm
+
+    pdf.setStrokeColor(colors.HexColor("#1E3A8A"))
+    pdf.setLineWidth(1.2)
+    pdf.circle(stamp_x, stamp_y, 14 * mm, stroke=1, fill=0)
+    pdf.setLineWidth(0.6)
+    pdf.circle(stamp_x, stamp_y, 11.5 * mm, stroke=1, fill=0)
+
+    pdf.setFillColor(colors.HexColor("#1E3A8A"))
+    pdf.setFont("Helvetica-Bold", 5.5)
+    pdf.drawCentredString(stamp_x, stamp_y + 7.5 * mm, "VFSTR UNIVERSITY")
+    pdf.drawCentredString(stamp_x, stamp_y + 4.5 * mm, "OFFICIAL AMORTIZATION")
+    pdf.setFont("Helvetica", 5)
+    pdf.drawCentredString(stamp_x, stamp_y + 1.5 * mm, "★ VADLAMUDI - 522213 ★")
+    pdf.setFont("Helvetica-Bold", 5.5)
+    pdf.drawCentredString(stamp_x, stamp_y - 2.5 * mm, "EDUCATION LOAN CELL")
+    pdf.setFont("Helvetica", 4.5)
+    pdf.drawCentredString(stamp_x, stamp_y - 6.5 * mm, "REF: IBA-SCHEME-VERIFIED")
+
+    # QR Code
+    qr_data = f"VFSTR-LOAN-ESTIMATE|STU:{d['student_id']}|P:{d['loan_amount']}|EMI:{d['monthly_emi']}|TENURE:{d['repayment_years']}Y"
+    qr_widget = qr.QrCodeWidget(qr_data)
+    bounds = qr_widget.getBounds()
+    qr_w = bounds[2] - bounds[0]
+    qr_h = bounds[3] - bounds[1]
+    qr_drawing = Drawing(18 * mm, 18 * mm, transform=[(18 * mm)/qr_w, 0, 0, (18 * mm)/qr_h, 0, 0])
+    qr_drawing.add(qr_widget)
+    renderPDF.draw(qr_drawing, pdf, 82 * mm, foot_y + 4 * mm)
+
+    pdf.setFillColor(colors.HexColor("#64748B"))
+    pdf.setFont("Helvetica", 6)
+    pdf.drawCentredString(91 * mm, foot_y + 1 * mm, "Scan to Verify Projection")
+
+    # Signatures
+    sig_x = 135 * mm
+    pdf.setFillColor(colors.HexColor("#0F172A"))
+    pdf.setFont("Helvetica-Bold", 7.5)
+    pdf.drawString(sig_x, foot_y + 19 * mm, "Dr. M. S. R. Murthy")
+    pdf.setFont("Helvetica", 6.8)
+    pdf.drawString(sig_x, foot_y + 15 * mm, "Dean, Student Affairs & Welfare")
+    pdf.drawString(sig_x, foot_y + 11.5 * mm, "VFSTR (Deemed to be University)")
+    pdf.setFont("Helvetica-Oblique", 6.5)
+    pdf.drawString(sig_x, foot_y + 7 * mm, "[Digitally Certified & Approved]")
+
+    # Disclaimer note
+    pdf.setFillColor(colors.HexColor("#64748B"))
+    pdf.setFont("Helvetica-Oblique", 6.2)
+    pdf.drawCentredString(page_width / 2, 17 * mm, "Note: Institutional reference amortization under IBA guidelines. Does not constitute commercial lending advice. Actual bank sanction subject to credit policy.")
+
+    pdf.save()
+
+
+@app.post("/calculator/repayment-estimate")
+def api_repayment_estimate(req: RepaymentEstimateRequest):
+    data = calculate_repayment_data(
+        loan_amount=req.loan_amount,
+        interest_rate=req.interest_rate,
+        study_type=req.study_type,
+        moratorium_years=req.moratorium_years,
+        repayment_years=req.repayment_years,
+        family_income=req.family_income,
+        service_interest_during_moratorium=req.service_interest_during_moratorium,
+        is_csis_subsidized=req.is_csis_subsidized,
+        student_name=req.student_name,
+        student_id=req.student_id
+    )
+    return data
+
+
+@app.post("/calculator/repayment-estimate/pdf")
+def api_repayment_estimate_pdf(req: RepaymentEstimateRequest):
+    data = calculate_repayment_data(
+        loan_amount=req.loan_amount,
+        interest_rate=req.interest_rate,
+        study_type=req.study_type,
+        moratorium_years=req.moratorium_years,
+        repayment_years=req.repayment_years,
+        family_income=req.family_income,
+        service_interest_during_moratorium=req.service_interest_during_moratorium,
+        is_csis_subsidized=req.is_csis_subsidized,
+        student_name=req.student_name,
+        student_id=req.student_id
+    )
+    safe_id = re.sub(r'[^a-zA-Z0-9_-]', '_', req.student_id or "Student")
+    filename = f"VFSTR_Loan_Amortization_{safe_id}_{datetime.now().strftime('%Y%m%d_%H%M%S')}.pdf"
+    file_path = os.path.join(DOCS_DIR, filename)
+    build_repayment_estimate_pdf(file_path, data)
+    
+    return FileResponse(
+        file_path,
+        media_type="application/pdf",
+        filename=filename,
+        headers={"Content-Disposition": f'attachment; filename="{filename}"'}
+    )
+
+
 if __name__ == "__main__":
     import uvicorn
     # Default to standard port 8080; in deployment, use cloud provider's PORT environment variable

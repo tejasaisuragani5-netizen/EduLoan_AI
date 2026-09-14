@@ -372,6 +372,8 @@
         <nav id="sideNav">
           <button type="button" class="nav-item active" onclick="switchTab('Dashboard')"><span style="font-size:20px">📊</span><span>Dashboard</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Eligibility Analyzer')"><span style="font-size:20px">🎓</span><span>Loan Eligibility Check</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Loan Calculator')"><span style="font-size:20px">🧮</span><span>Loan & EMI Calculator</span></button>
+
           <button type="button" class="nav-item" onclick="switchTab('Students')"><span style="font-size:20px">👥</span><span>Students & Loans</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Document Requests')"><span style="font-size:20px">📑</span><span>Document Requests</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Bank Schemes')"><span style="font-size:20px">🏦</span><span>Bank Schemes</span></button>
@@ -857,6 +859,281 @@
             </div>
           </div>
         </section>
+      
+        <!-- 10. LOAN & 5-YEAR MORATORIUM EMI CALCULATOR -->
+        <section id="page-Loan Calculator" class="hidden">
+          <div class="page-title">
+            <h1>Education Loan & 5-Year Moratorium Repayment EMI Calculator</h1>
+            <p>Institutional reference projection for B.Tech (India) and Study Abroad students under IBA Model Scheme guidelines. Estimate eligible loan limits, 5-year moratorium simple interest, CSIS 100% government interest waiver, post-moratorium monthly EMI, and Section 80E tax savings.</p>
+          </div>
+
+          <!-- Bilingual Informational Banner -->
+          <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:flex-start; gap:16px;">
+            <div style="font-size:32px;">🧮</div>
+            <div style="flex:1;">
+              <strong style="color:#1e3a8a; font-size:15px;">5-Year Moratorium & Repayment Dynamics (5 ఏళ్ల తర్వాత EMI & వడ్డీ లెక్కలు)</strong>
+              <p style="margin:4px 0 0 0; font-size:13px; color:#1e40af; line-height:1.45;">
+                Under standard Indian education loan guidelines, repayment starts <strong>5 years after admission</strong> (4 years course + 1 year grace period). During this period, simple interest is charged. If your family annual income is <strong>&le; ₹4.50 Lakhs</strong>, the Government of India (CSIS scheme) pays <strong>100% of the interest</strong> during these 5 years!
+              </p>
+            </div>
+          </div>
+
+          <!-- Quick Scenario Presets -->
+          <div class="section" style="margin-bottom: 20px;">
+            <div style="font-weight:700; color:#1e3a8a; margin-bottom:10px; font-size:14px;">⚡ Instant Loan Scenario Presets (త్వరిత ఎంపికలు):</div>
+            <div style="display:flex; flex-wrap:wrap; gap:8px;">
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_base')">🎓 B.Tech Base (₹4.0L @ 9.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_csis')">⭐ B.Tech (₹4.0L + 100% CSIS Waiver)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_cgfel')">🏛️ Govt CGFEL Limit (₹7.5L Collateral-Free)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('btech_premier')">🏆 SBI Scholar VFSTR (₹15.0L @ 9.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_25')">✈️ Abroad MS Base (₹25.0L @ 10.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_40')">🌍 Abroad MS Standard (₹40.0L @ 10.5%)</button>
+              <button type="button" class="secondary-button" style="padding:6px 14px; font-size:12.5px;" onclick="applyCalcPreset('abroad_50')">🌐 Abroad MS Premier (₹50.0L @ 10.5%)</button>
+            </div>
+          </div>
+
+          <!-- Calculator Two-Column Layout -->
+          <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(360px, 1fr)); gap: 20px; align-items:start;">
+            
+            <!-- LEFT COLUMN: INPUT PARAMETERS -->
+            <div class="card" style="padding:22px;">
+              <h2 style="font-size:17px; margin-bottom:16px; color:#1e3a8a; display:flex; align-items:center; gap:8px;">
+                <span>⚙️</span> Loan & Moratorium Parameters
+              </h2>
+
+              <!-- Study Type -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Study Program & Destination</label>
+                <div style="display:flex; gap:10px; margin-top:6px;">
+                  <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;" id="lblStudyDomestic">
+                    <input type="radio" name="calcStudyType" value="domestic" checked onchange="onStudyTypeChange()"> 🇮🇳 B.Tech (India)
+                  </label>
+                  <label style="flex:1; display:flex; align-items:center; gap:8px; padding:10px 14px; border:1.5px solid #cbd5e1; border-radius:8px; cursor:pointer; font-weight:600; font-size:13px;" id="lblStudyAbroad">
+                    <input type="radio" name="calcStudyType" value="abroad" onchange="onStudyTypeChange()"> ✈️ Study Abroad (MS)
+                  </label>
+                </div>
+              </div>
+
+              <!-- Registered Student Auto-Select -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:600;">Student Reference (Optional)</label>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-bottom:6px;">
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('Tejasai', '261FA04001')">Tejasai (261FA04001)</button>
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('K. Jagadeesh', '241FA04195')">K. Jagadeesh (241FA04195)</button>
+                  <button type="button" class="secondary-button" style="padding:4px 8px; font-size:11.5px;" onclick="setCalcStudent('N. Yasaswi', '241FA04202')">N. Yasaswi (241FA04202)</button>
+                </div>
+                <div style="display:flex; gap:8px;">
+                  <input type="text" id="calcStudentName" placeholder="Student Name" value="Tejasai" style="flex:1;">
+                  <input type="text" id="calcStudentId" placeholder="Register No" value="261FA04001" style="width:130px; font-weight:700;">
+                </div>
+              </div>
+
+              <!-- Loan Amount -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Sanctioned Loan Amount (₹)</label>
+                  <span id="txtLoanAmountDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">₹ 4,00,000</span>
+                </div>
+                <input type="range" id="rngLoanAmount" min="100000" max="10000000" step="50000" value="400000" oninput="onLoanSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <input type="number" id="calcLoanAmount" value="400000" min="50000" max="20000000" oninput="onLoanInputChange(this.value)" style="font-weight:700;">
+                <small id="txtCollateralNotice" style="display:block; margin-top:4px; color:#166534; font-weight:600;">✓ 100% Collateral-Free (0% Margin required)</small>
+              </div>
+
+              <!-- Interest Rate -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Annual Interest Rate (%)</label>
+                  <span id="txtRateDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">9.50% p.a.</span>
+                </div>
+                <input type="range" id="rngInterestRate" min="6.0" max="15.0" step="0.25" value="9.5" oninput="onRateSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <input type="number" id="calcInterestRate" value="9.5" step="0.1" min="4.0" max="20.0" oninput="onRateInputChange(this.value)">
+                <small style="color:#64748b;">Benchmark: Public Sector Banks ~8.50% – 10.50% p.a.</small>
+              </div>
+
+              <!-- Moratorium Duration -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Study Moratorium Period (Years)</label>
+                <div style="display:grid; grid-template-columns: 1fr 1fr; gap:10px;">
+                  <div>
+                    <span style="font-size:12px; color:#64748b;">Course Duration:</span>
+                    <select id="calcCourseYears" onchange="recalculateClientLoan()" style="font-weight:600;">
+                      <option value="4" selected>4 Years (B.Tech Standard)</option>
+                      <option value="2">2 Years (MS Abroad)</option>
+                      <option value="3">3 Years (Degree)</option>
+                      <option value="5">5 Years (Integrated)</option>
+                    </select>
+                  </div>
+                  <div>
+                    <span style="font-size:12px; color:#64748b;">Grace Period:</span>
+                    <select id="calcGraceYears" onchange="recalculateClientLoan()" style="font-weight:600;">
+                      <option value="1" selected>1 Year (Standard)</option>
+                      <option value="0.5">6 Months (Post-Job)</option>
+                      <option value="0">0 Months</option>
+                    </select>
+                  </div>
+                </div>
+                <small style="color:#1e3a8a; font-weight:600; display:block; margin-top:4px;">Total Moratorium Before Repayment: <span id="txtTotalMoratoriumDisplay">5.0 Years</span></small>
+              </div>
+
+              <!-- Family Income (CSIS Trigger) -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Annual Family Income (₹)</label>
+                <input type="number" id="calcFamilyIncome" value="350000" placeholder="e.g. 350000" oninput="onIncomeChange(this.value)">
+                <small id="txtCsisNotice" style="display:block; margin-top:4px; color:#15803d; font-weight:700;">
+                  🎉 Income &le; ₹4.50 LPA: 100% CSIS Moratorium Interest Subsidy Applicable!
+                </small>
+              </div>
+
+              <!-- Moratorium Handling Options -->
+              <div class="form-group" style="margin-bottom:16px;">
+                <label style="font-weight:700;">Moratorium Interest Servicing Mode</label>
+                <div style="display:flex; flex-direction:column; gap:8px; margin-top:6px;">
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;">
+                    <input type="radio" name="calcMoratOption" value="defer" checked onchange="recalculateClientLoan()">
+                    <span><strong>Option A: Defer Interest</strong> (Accrue simple interest during study & add to principal at Year 5)</span>
+                  </label>
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;">
+                    <input type="radio" name="calcMoratOption" value="service_monthly" onchange="recalculateClientLoan()">
+                    <span><strong>Option B: Pay Simple Interest Monthly</strong> (Earn 1.00% interest concession from bank throughout tenure)</span>
+                  </label>
+                  <label style="display:flex; align-items:flex-start; gap:8px; font-size:12.5px; cursor:pointer;" id="lblCsisOption">
+                    <input type="radio" name="calcMoratOption" value="csis" onchange="recalculateClientLoan()">
+                    <span><strong>Option C: CSIS Govt Subsidy</strong> (100% moratorium interest waived by Ministry of Education)</span>
+                  </label>
+                </div>
+              </div>
+
+              <!-- Repayment Tenure -->
+              <div class="form-group">
+                <div style="display:flex; justify-content:space-between; align-items:center;">
+                  <label style="font-weight:700;">Post-Moratorium Repayment Tenure</label>
+                  <span id="txtTenureDisplay" style="font-weight:800; color:#1e3a8a; font-size:15px;">10 Years (120 Mo)</span>
+                </div>
+                <input type="range" id="rngRepayYears" min="3" max="15" step="1" value="10" oninput="onTenureSliderChange(this.value)" style="width:100%; margin:8px 0;">
+                <select id="calcRepayYears" onchange="onTenureSelectChange(this.value)" style="font-weight:700;">
+                  <option value="5">5 Years (60 Months)</option>
+                  <option value="7">7 Years (84 Months)</option>
+                  <option value="10" selected>10 Years (120 Months Standard)</option>
+                  <option value="12">12 Years (144 Months)</option>
+                  <option value="15">15 Years (180 Months Max)</option>
+                </select>
+              </div>
+
+            </div>
+
+            <!-- RIGHT COLUMN: DYNAMIC RESULTS & PDF GENERATION -->
+            <div>
+              
+              <!-- BIG HERO EMI CARD -->
+              <div style="background: linear-gradient(135deg, #065f46 0%, #047857 100%); color:white; border-radius:14px; padding:24px; box-shadow:0 8px 24px rgba(4,120,87,0.25); margin-bottom:18px;">
+                <div style="font-size:12px; font-weight:700; letter-spacing:1px; text-transform:uppercase; color:#a7f3d0; margin-bottom:6px;">
+                  POST 5-YEAR MORATORIUM MONTHLY REPAYMENT
+                </div>
+                <div style="font-size:38px; font-weight:800; font-family:'Segoe UI', sans-serif; line-height:1.1; margin-bottom:6px;" id="resMonthlyEmi">
+                  ₹ 7,634 <span style="font-size:18px; font-weight:400; color:#d1fae5;">/ month</span>
+                </div>
+                <div style="font-size:13px; color:#d1fae5; line-height:1.4;" id="resEmiSubtext">
+                  Payable for 120 months starting after completion of 5-year moratorium.
+                </div>
+
+                <!-- 1-Click PDF Download Button Inside Hero -->
+                <div style="margin-top:18px; padding-top:16px; border-top:1px solid rgba(255,255,255,0.2); display:flex; gap:10px; flex-wrap:wrap;">
+                  <button type="button" class="primary-button" style="background:#ffffff; color:#065f46; font-weight:800; font-size:14px; padding:10px 18px; border:none; box-shadow:0 4px 12px rgba(0,0,0,0.15);" onclick="downloadAmortizationPdf()">
+                    📥 Download Certified Loan Dossier (PDF)
+                  </button>
+                  <button type="button" class="secondary-button" style="background:rgba(255,255,255,0.15); color:white; border:1px solid rgba(255,255,255,0.3); font-weight:700; font-size:13px; padding:10px 16px;" onclick="copyRepaymentSummary()">
+                    📋 Copy Summary
+                  </button>
+                </div>
+              </div>
+
+              <!-- 4-METRICS STAT GRID -->
+              <div style="display:grid; grid-template-columns: repeat(auto-fit, minmax(160px, 1fr)); gap:12px; margin-bottom:18px;">
+                
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">5-Yr Moratorium Int.</div>
+                  <div style="font-size:18px; font-weight:800; color:#b45309; margin-top:4px;" id="resMoratInterest">₹ 1,90,000</div>
+                  <small id="resMoratSubtitle" style="color:#78350f; font-size:11px;">Simple Interest</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Principal at Year 5</div>
+                  <div style="font-size:18px; font-weight:800; color:#1e3a8a; margin-top:4px;" id="resRepayPrincipal">₹ 5,90,000</div>
+                  <small style="color:#475569; font-size:11px;">Balance at Start</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Total Interest Paid</div>
+                  <div style="font-size:18px; font-weight:800; color:#dc2626; margin-top:4px;" id="resTotalInterest">₹ 5,16,135</div>
+                  <small style="color:#7f1d1d; font-size:11px;">Lifetime Interest</small>
+                </div>
+
+                <div style="background:#fff; border:1px solid #e2e8f0; border-radius:10px; padding:14px;">
+                  <div style="font-size:11.5px; color:#64748b; font-weight:700; text-transform:uppercase;">Total Cash Outflow</div>
+                  <div style="font-size:18px; font-weight:800; color:#0f172a; margin-top:4px;" id="resTotalLifetime">₹ 9,16,135</div>
+                  <small style="color:#475569; font-size:11px;">Principal + Interest</small>
+                </div>
+
+              </div>
+
+              <!-- SPECIAL SCHEME & TAX STATUS CARDS -->
+              <div style="display:flex; flex-direction:column; gap:10px; margin-bottom:18px;">
+                
+                <!-- CSIS Banner -->
+                <div id="boxCsisStatus" style="background:#dcfce7; border:1.5px solid #86efac; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:22px;">🏛️</span>
+                  <div style="flex:1;">
+                    <strong style="color:#166534; font-size:13.5px;" id="txtCsisTitle">CSIS / PM-USP Central Interest Subsidy Qualified</strong>
+                    <div style="font-size:12px; color:#15803d;" id="txtCsisDesc">Ministry of Education covers 100% of the 5-year moratorium interest. Student saves ₹1,90,000!</div>
+                  </div>
+                </div>
+
+                <!-- Section 80E Tax Savings -->
+                <div style="background:#f8fafc; border:1.5px solid #cbd5e1; border-radius:10px; padding:12px 16px; display:flex; align-items:center; gap:12px;">
+                  <span style="font-size:22px;">💼</span>
+                  <div style="flex:1;">
+                    <strong style="color:#0f172a; font-size:13.5px;">Income Tax Deduction (Section 80E Benefit)</strong>
+                    <div style="font-size:12px; color:#475569;">
+                      100% of the interest paid for 8 continuous years is fully tax-deductible without any upper ceiling. Estimated Tax Savings: <strong style="color:#1e3a8a;" id="txtTaxSavings">₹ 54,269</strong> (at 20% tax slab).
+                    </div>
+                  </div>
+                </div>
+
+              </div>
+
+            </div>
+
+          </div>
+
+          <!-- AMORTIZATION TABLE SECTION -->
+          <div class="section" style="margin-top:24px;">
+            <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:14px; flex-wrap:wrap; gap:10px;">
+              <h2>Year-by-Year Amortization Schedule (Post 5-Year Moratorium)</h2>
+              <button type="button" class="secondary-button" style="font-size:12.5px; padding:6px 14px;" onclick="toggleAmortizationTable()">
+                <span id="btnToggleTableText">▼ Show Full Schedule</span>
+              </button>
+            </div>
+            
+            <div id="amortizationTableWrapper" style="display:none;" class="table-container">
+              <table>
+                <thead>
+                  <tr>
+                    <th>Year</th>
+                    <th>Annual Payment</th>
+                    <th>Principal Paid</th>
+                    <th>Interest Paid</th>
+                    <th>Ending Balance</th>
+                  </tr>
+                </thead>
+                <tbody id="amortizationTableBody">
+                  <!-- Injected via JavaScript -->
+                </tbody>
+              </table>
+            </div>
+          </div>
+
+        </section>
+
       </main>
     </div>
   </div>
@@ -1863,6 +2140,384 @@
       const totalDisb = state.disbursements.reduce((acc, d) => acc + (d.loan_amount || 0), 0);
       document.getElementById('statTotalDisbursed').innerText = '₹ ' + totalDisb.toLocaleString('en-IN');
     }
+
+    
+    // =========================================================
+    // WORKFLOW 10: EDUCATION LOAN & EMI CALCULATOR JAVASCRIPT
+    // =========================================================
+    let currentCalcData = null;
+
+    function applyCalcPreset(presetKey) {
+      if (presetKey === 'btech_base') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(400000, 9.5, 4, 1, 600000, 'defer', 10);
+      } else if (presetKey === 'btech_csis') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(400000, 9.5, 4, 1, 300000, 'csis', 10);
+      } else if (presetKey === 'btech_cgfel') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(750000, 9.5, 4, 1, 600000, 'defer', 10);
+      } else if (presetKey === 'btech_premier') {
+        document.querySelector('input[name="calcStudyType"][value="domestic"]').checked = true;
+        setCalcValues(1500000, 9.5, 4, 1, 800000, 'defer', 12);
+      } else if (presetKey === 'abroad_25') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(2500000, 10.5, 2, 1, 1200000, 'defer', 12);
+      } else if (presetKey === 'abroad_40') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(4000000, 10.5, 2, 1, 1500000, 'defer', 15);
+      } else if (presetKey === 'abroad_50') {
+        document.querySelector('input[name="calcStudyType"][value="abroad"]').checked = true;
+        setCalcValues(5000000, 10.5, 2, 1, 2000000, 'defer', 15);
+      }
+      onStudyTypeChange();
+      recalculateClientLoan();
+    }
+
+    function setCalcValues(amount, rate, courseYrs, graceYrs, income, moratOpt, tenureYrs) {
+      document.getElementById('calcLoanAmount').value = amount;
+      document.getElementById('rngLoanAmount').value = amount;
+      document.getElementById('calcInterestRate').value = rate;
+      document.getElementById('rngInterestRate').value = rate;
+      document.getElementById('calcCourseYears').value = courseYrs;
+      document.getElementById('calcGraceYears').value = graceYrs;
+      document.getElementById('calcFamilyIncome').value = income;
+      document.getElementById('calcRepayYears').value = tenureYrs;
+      document.getElementById('rngRepayYears').value = tenureYrs;
+      
+      const optEl = document.querySelector(`input[name="calcMoratOption"][value="${moratOpt}"]`);
+      if (optEl) optEl.checked = true;
+    }
+
+    function setCalcStudent(name, id) {
+      document.getElementById('calcStudentName').value = name;
+      document.getElementById('calcStudentId').value = id;
+      showNotice(`Student ${name} (${id}) selected for loan estimate calculation.`);
+    }
+
+    function onStudyTypeChange() {
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      const lblDom = document.getElementById('lblStudyDomestic');
+      const lblAbr = document.getElementById('lblStudyAbroad');
+      const csisNotice = document.getElementById('txtCsisNotice');
+      const lblCsis = document.getElementById('lblCsisOption');
+      
+      if (studyType === 'domestic') {
+        lblDom.style.borderColor = '#1e3a8a';
+        lblDom.style.background = '#eff6ff';
+        lblAbr.style.borderColor = '#cbd5e1';
+        lblAbr.style.background = '#ffffff';
+        if (csisNotice) csisNotice.style.display = 'block';
+        if (lblCsis) lblCsis.style.display = 'flex';
+      } else {
+        lblAbr.style.borderColor = '#1e3a8a';
+        lblAbr.style.background = '#eff6ff';
+        lblDom.style.borderColor = '#cbd5e1';
+        lblDom.style.background = '#ffffff';
+        if (csisNotice) csisNotice.style.display = 'none';
+        if (lblCsis) lblCsis.style.display = 'none';
+        const optCsis = document.querySelector('input[name="calcMoratOption"][value="csis"]');
+        if (optCsis && optCsis.checked) {
+          document.querySelector('input[name="calcMoratOption"][value="defer"]').checked = true;
+        }
+      }
+      recalculateClientLoan();
+    }
+
+    function onLoanSliderChange(val) {
+      document.getElementById('calcLoanAmount').value = val;
+      recalculateClientLoan();
+    }
+
+    function onLoanInputChange(val) {
+      document.getElementById('rngLoanAmount').value = Math.min(10000000, Math.max(100000, Number(val) || 100000));
+      recalculateClientLoan();
+    }
+
+    function onRateSliderChange(val) {
+      document.getElementById('calcInterestRate').value = val;
+      recalculateClientLoan();
+    }
+
+    function onRateInputChange(val) {
+      document.getElementById('rngInterestRate').value = Math.min(15.0, Math.max(6.0, Number(val) || 6.0));
+      recalculateClientLoan();
+    }
+
+    function onTenureSliderChange(val) {
+      document.getElementById('calcRepayYears').value = val;
+      recalculateClientLoan();
+    }
+
+    function onTenureSelectChange(val) {
+      document.getElementById('rngRepayYears').value = val;
+      recalculateClientLoan();
+    }
+
+    function onIncomeChange(val) {
+      const inc = Number(val) || 0;
+      const csisNotice = document.getElementById('txtCsisNotice');
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      if (studyType === 'domestic') {
+        if (inc > 0 && inc <= 450000) {
+          csisNotice.innerText = '🎉 Income ≤ ₹4.50 LPA: 100% CSIS Moratorium Interest Subsidy Applicable!';
+          csisNotice.style.color = '#15803d';
+        } else {
+          csisNotice.innerText = 'Family income > ₹4.50 LPA (CSIS subsidy ceiling exceeded).';
+          csisNotice.style.color = '#64748b';
+        }
+      }
+      recalculateClientLoan();
+    }
+
+    function recalculateClientLoan() {
+      const loanAmount = Math.max(10000, Number(document.getElementById('calcLoanAmount').value) || 400000);
+      const interestRate = Math.max(1.0, Number(document.getElementById('calcInterestRate').value) || 9.5);
+      const courseYears = Number(document.getElementById('calcCourseYears').value) || 4.0;
+      const graceYears = Number(document.getElementById('calcGraceYears').value) || 1.0;
+      const moratoriumYears = courseYears + graceYears;
+      const familyIncome = Number(document.getElementById('calcFamilyIncome').value) || 0;
+      const repaymentYears = Number(document.getElementById('calcRepayYears').value) || 10;
+      const studyType = document.querySelector('input[name="calcStudyType"]:checked').value;
+      const moratOption = document.querySelector('input[name="calcMoratOption"]:checked').value;
+      const studentName = document.getElementById('calcStudentName').value || 'Student';
+      const studentId = document.getElementById('calcStudentId').value || 'N/A';
+
+      // Update Slider text badges
+      document.getElementById('txtLoanAmountDisplay').innerText = '₹ ' + loanAmount.toLocaleString('en-IN');
+      document.getElementById('txtRateDisplay').innerText = interestRate.toFixed(2) + '% p.a.';
+      document.getElementById('txtTenureDisplay').innerText = `${repaymentYears} Years (${repaymentYears * 12} Mo)`;
+      document.getElementById('txtTotalMoratoriumDisplay').innerText = `${moratoriumYears.toFixed(1)} Years`;
+
+      // Collateral text
+      const colNotice = document.getElementById('txtCollateralNotice');
+      if (studyType === 'domestic') {
+        if (loanAmount <= 400000) colNotice.innerText = '✓ 100% Collateral-Free & 0% Margin (IBA Base Scheme)';
+        else if (loanAmount <= 750000) colNotice.innerText = '✓ 100% Collateral-Free (Govt CGFEL Guarantee Covered)';
+        else if (loanAmount <= 2000000) colNotice.innerText = '⭐ VFSTR Tier-A Premier Listing (SBI Scholar Scheme Eligible)';
+        else colNotice.innerText = '⚠️ Tangible Collateral (Property / Fixed Deposit) Required';
+      } else {
+        if (loanAmount <= 750000) colNotice.innerText = '✓ Collateral-Free (CGFEL Scheme - 15% margin)';
+        else colNotice.innerText = '⚠️ Tangible Security (Property/FD) + 15% Student Margin Required';
+      }
+
+      // Calculation logic
+      const isCsisEligible = (studyType === 'domestic') && (moratOption === 'csis' || (familyIncome > 0 && familyIncome <= 450000 && moratOption !== 'service_monthly'));
+      const isServiceMonthly = (moratOption === 'service_monthly');
+
+      let effectiveRate = interestRate;
+      if (isServiceMonthly && effectiveRate > 1.0) effectiveRate -= 1.0;
+
+      const rMonthly = (effectiveRate / 100.0) / 12.0;
+      const nMonths = repaymentYears * 12;
+      const simpleMoratInterest = Math.round(loanAmount * (interestRate / 100.0) * moratoriumYears);
+
+      let moratInterestPaidByStudent = 0;
+      let csisGovtPaid = 0;
+      let principalAtRepayment = loanAmount;
+
+      if (isCsisEligible) {
+        moratInterestPaidByStudent = 0;
+        csisGovtPaid = simpleMoratInterest;
+        principalAtRepayment = loanAmount;
+      } else if (isServiceMonthly) {
+        moratInterestPaidByStudent = simpleMoratInterest;
+        csisGovtPaid = 0;
+        principalAtRepayment = loanAmount;
+      } else {
+        moratInterestPaidByStudent = simpleMoratInterest;
+        csisGovtPaid = 0;
+        principalAtRepayment = loanAmount + simpleMoratInterest;
+      }
+
+      let emi = 0;
+      if (rMonthly > 0 && nMonths > 0) {
+        emi = Math.round((principalAtRepayment * rMonthly * Math.pow(1 + rMonthly, nMonths)) / (Math.pow(1 + rMonthly, nMonths) - 1));
+      } else {
+        emi = Math.round(principalAtRepayment / Math.max(1, nMonths));
+      }
+
+      const totalRepaymentPaid = emi * nMonths;
+      const repaymentPhaseInterest = totalRepaymentPaid - principalAtRepayment;
+      const totalInterestPaid = moratInterestPaidByStudent + repaymentPhaseInterest;
+      const totalLifetimeOutflow = loanAmount + totalInterestPaid;
+      const tax80eDeductible = Math.min(totalInterestPaid, Math.round(repaymentPhaseInterest * Math.min(1.0, 8.0 / repaymentYears)));
+      const estimatedTaxSavings = Math.round(tax80eDeductible * 0.208);
+
+      // Save into global state
+      currentCalcData = {
+        student_name: studentName,
+        student_id: studentId,
+        study_type: studyType,
+        loan_amount: loanAmount,
+        interest_rate: interestRate,
+        effective_rate: effectiveRate,
+        moratorium_years: moratoriumYears,
+        repayment_years: repaymentYears,
+        family_income: familyIncome,
+        csis_eligible: isCsisEligible,
+        service_interest_during_moratorium: isServiceMonthly,
+        monthly_emi: emi,
+        moratorium_interest: simpleMoratInterest,
+        moratorium_interest_student_pays: moratInterestPaidByStudent,
+        csis_govt_subsidy_amount: csisGovtPaid,
+        principal_at_repayment: principalAtRepayment,
+        total_interest_paid: totalInterestPaid,
+        total_lifetime_outflow: totalLifetimeOutflow,
+        estimated_tax_savings_80e: estimatedTaxSavings
+      };
+
+      // Update UI displays
+      document.getElementById('resMonthlyEmi').innerHTML = `₹ ${emi.toLocaleString('en-IN')} <span style="font-size:18px; font-weight:400; color:#d1fae5;">/ month</span>`;
+      document.getElementById('resEmiSubtext').innerText = `Payable for ${nMonths} months (${repaymentYears} yrs) starting after completion of ${moratoriumYears.toFixed(1)}-year study moratorium.`;
+
+      const elMorat = document.getElementById('resMoratInterest');
+      const elMoratSub = document.getElementById('resMoratSubtitle');
+      if (isCsisEligible) {
+        elMorat.innerHTML = `<span style="color:#059669;">₹ 0 (GOVT PAID)</span>`;
+        elMoratSub.innerText = `Saved ₹ ${csisGovtPaid.toLocaleString('en-IN')} via CSIS`;
+      } else {
+        elMorat.innerText = '₹ ' + simpleMoratInterest.toLocaleString('en-IN');
+        elMoratSub.innerText = isServiceMonthly ? 'Paid Monthly During Study' : 'Capitalized at Year 5';
+      }
+
+      document.getElementById('resRepayPrincipal').innerText = '₹ ' + principalAtRepayment.toLocaleString('en-IN');
+      document.getElementById('resTotalInterest').innerText = '₹ ' + totalInterestPaid.toLocaleString('en-IN');
+      document.getElementById('resTotalLifetime').innerText = '₹ ' + totalLifetimeOutflow.toLocaleString('en-IN');
+      document.getElementById('txtTaxSavings').innerText = '₹ ' + estimatedTaxSavings.toLocaleString('en-IN');
+
+      // CSIS Banner Toggle
+      const csisBox = document.getElementById('boxCsisStatus');
+      const csisTitle = document.getElementById('txtCsisTitle');
+      const csisDesc = document.getElementById('txtCsisDesc');
+      if (isCsisEligible) {
+        csisBox.style.display = 'flex';
+        csisBox.style.background = '#dcfce7';
+        csisBox.style.borderColor = '#86efac';
+        csisTitle.innerText = '🎉 CSIS / PM-USP Central Interest Subsidy Qualified!';
+        csisDesc.innerText = `100% of your 5-year moratorium interest (₹ ${csisGovtPaid.toLocaleString('en-IN')}) is completely waived and funded by the Ministry of Education!`;
+      } else if (isServiceMonthly) {
+        csisBox.style.display = 'flex';
+        csisBox.style.background = '#eff6ff';
+        csisBox.style.borderColor = '#93c5fd';
+        csisTitle.innerText = '⭐ 1.00% Bank Interest Concession Applied';
+        csisDesc.innerText = `Servicing simple interest monthly during study earns a full 1% interest rate discount throughout your entire repayment period!`;
+      } else {
+        csisBox.style.display = 'none';
+      }
+
+      // Render Schedule Table
+      renderAmortizationSchedule(principalAtRepayment, rMonthly, emi, repaymentYears);
+    }
+
+    function renderAmortizationSchedule(principal, rMonthly, emi, years) {
+      const tbody = document.getElementById('amortizationTableBody');
+      if (!tbody) return;
+      tbody.innerHTML = '';
+
+      let bal = principal;
+      for (let yr = 1; yr <= years; yr++) {
+        let yrInterest = 0;
+        let yrPrincipal = 0;
+        for (let m = 0; m < 12; m++) {
+          const intM = bal * rMonthly;
+          const prM = emi - intM;
+          yrInterest += intM;
+          yrPrincipal += prM;
+          bal = Math.max(0, bal - prM);
+        }
+        tbody.innerHTML += `
+          <tr>
+            <td><strong>Year ${yr}</strong></td>
+            <td>₹ ${(emi * 12).toLocaleString('en-IN')}</td>
+            <td style="color:#047857; font-weight:600;">₹ ${Math.round(yrPrincipal).toLocaleString('en-IN')}</td>
+            <td style="color:#b91c1c; font-weight:600;">₹ ${Math.round(yrInterest).toLocaleString('en-IN')}</td>
+            <td style="font-weight:700;">₹ ${Math.round(bal).toLocaleString('en-IN')}</td>
+          </tr>
+        `;
+      }
+    }
+
+    function toggleAmortizationTable() {
+      const wrapper = document.getElementById('amortizationTableWrapper');
+      const btn = document.getElementById('btnToggleTableText');
+      if (wrapper.style.display === 'none' || !wrapper.style.display) {
+        wrapper.style.display = 'block';
+        btn.innerText = '▲ Hide Schedule';
+      } else {
+        wrapper.style.display = 'none';
+        btn.innerText = '▼ Show Full Schedule';
+      }
+    }
+
+    async function downloadAmortizationPdf() {
+      if (!currentCalcData) recalculateClientLoan();
+      showNotice('Generating official VFSTR Loan Amortization Dossier PDF...');
+
+      try {
+        const payload = {
+          loan_amount: currentCalcData.loan_amount,
+          interest_rate: currentCalcData.interest_rate,
+          study_type: currentCalcData.study_type,
+          moratorium_years: currentCalcData.moratorium_years,
+          repayment_years: currentCalcData.repayment_years,
+          family_income: currentCalcData.family_income,
+          service_interest_during_moratorium: currentCalcData.service_interest_during_moratorium,
+          is_csis_subsidized: currentCalcData.csis_eligible,
+          student_name: currentCalcData.student_name,
+          student_id: currentCalcData.student_id
+        };
+
+        const res = await fetch(`${API_BASE}/calculator/repayment-estimate/pdf`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(payload)
+        });
+
+        if (!res.ok) throw new Error('PDF Generation failed on backend');
+
+        const blob = await res.blob();
+        const url = window.URL.createObjectURL(blob);
+        const a = document.createElement('a');
+        a.href = url;
+        a.download = `VFSTR_Loan_Amortization_${currentCalcData.student_id}_Estimate.pdf`;
+        document.body.appendChild(a);
+        a.click();
+        a.remove();
+        window.URL.revokeObjectURL(url);
+        showNotice('✓ Official Loan Amortization PDF downloaded successfully!');
+      } catch (err) {
+        console.error(err);
+        showNotice('Failed to download PDF: ' + err.message, true);
+      }
+    }
+
+    function copyRepaymentSummary() {
+      if (!currentCalcData) recalculateClientLoan();
+      const text = `VFSTR EDUCATION LOAN AMORTIZATION ESTIMATE
+Candidate: ${currentCalcData.student_name} (${currentCalcData.student_id})
+Destination: ${currentCalcData.study_type === 'domestic' ? 'Domestic B.Tech (India)' : 'Study Abroad (MS)'}
+Loan Amount: ₹ ${currentCalcData.loan_amount.toLocaleString('en-IN')}
+Benchmark Interest: ${currentCalcData.effective_rate.toFixed(2)}% p.a.
+Moratorium Period: ${currentCalcData.moratorium_years.toFixed(1)} Years
+Post-Moratorium Monthly EMI: ₹ ${currentCalcData.monthly_emi.toLocaleString('en-IN')} / month
+Repayment Tenure: ${currentCalcData.repayment_years} Years
+5-Year Moratorium Interest: ${currentCalcData.csis_eligible ? '₹ 0 (100% CSIS Govt Paid)' : '₹ ' + currentCalcData.moratorium_interest.toLocaleString('en-IN')}
+Total Interest Paid: ₹ ${currentCalcData.total_interest_paid.toLocaleString('en-IN')}
+Total Lifetime Outflow: ₹ ${currentCalcData.total_lifetime_outflow.toLocaleString('en-IN')}
+Generated by Agent 43 - VFSTR Education Loan Cell`;
+
+      navigator.clipboard.writeText(text).then(() => {
+        showNotice('✓ Loan projection summary copied to clipboard!');
+      });
+    }
+
+    // Initialize calculator defaults on startup
+    setTimeout(() => {
+      if (document.getElementById('calcLoanAmount')) {
+        recalculateClientLoan();
+      }
+    }, 500);
 
     // Initial load
     refreshAll();
