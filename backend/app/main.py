@@ -1043,7 +1043,7 @@ SCHEMES_KNOWLEDGE_BASE = [
         "id": "pm-usp-csis",
         "name": "PM-USP / CSIS (Central Sector Interest Subsidy)",
         "authority": "Department of Higher Education, Govt of India",
-        "description": "100% full government-paid interest subsidy during study period and moratorium for students from economically weaker sections (EWS).",
+        "description": "Full interest subsidy strictly during the moratorium period (course period + 1 year) for eligible EWS students (family income <= ₹4.50 LPA) under Ministry of Education guidelines.",
         "applicable_banks": "All Scheduled Commercial Banks under IBA Model Scheme",
         "max_limit": "Covers loans up to ₹10 Lakhs without collateral",
         "interest_subsidy": "100% Interest waiver during course + 1 year moratorium",
@@ -2839,7 +2839,7 @@ def build_eligibility_dossier_pdf(file_path, student, eval_data):
         ("1. Vidya Lakshmi Portal (CELC)", "ELIGIBLE", "All core institutional certificates verified. Ready for portal submission."),
         ("2. CGFEL Collateral-Free Ceiling", eval_data.get("cgfel_status", "ELIGIBLE <= Rs. 7.50 L"), eval_data.get("cgfel_notes", "No third-party collateral needed under Credit Guarantee Fund.")),
         ("3. CSIS Central Interest Subsidy", eval_data.get("csis_status", "ELIGIBLE"), eval_data.get("csis_notes", "Full interest waiver during moratorium period.")),
-        ("4. SBI Scholar / Premier Category", "ELIGIBLE <= Rs. 20.00 L", "VFSTR Tier-A accredited listing. 0% margin money applicable.")
+        ("4. Premier Institution / SBI Education Loan", "ELIGIBLE <= Rs. 20.00 L", "VFSTR NAAC 'A+' Accredited Deemed University. Concessional terms & 0% margin money up to approved caps.")
     ]
 
     cur_row_y = s_y + 38 * mm
@@ -3248,9 +3248,9 @@ async def analyze_bundle_eligibility(
         csis_status = "STANDARD RATES (INCOME > 4.5 LPA)"
         csis_notes = f"Annual income (Rs. {income:,.2f}) exceeds the Rs. 4.50 Lakhs threshold. Standard commercial education loan interest applies."
 
-    # 4. SBI Scholar / Premier Category (VFSTR Tier-A)
+    # 4. Premier Institutional Category / SBI Scheme (VFSTR NAAC A+ Accredited)
     sbi_status = "ELIGIBLE UP TO Rs. 20.00 LAKHS"
-    sbi_notes = "VFSTR Deemed University is listed under premier institutions. 0% margin money applies up to Rs. 20 Lakhs."
+    sbi_notes = "VFSTR NAAC 'A+' Accredited Category-1 Deemed University is eligible for premier terms with 0% margin money up to approved caps."
 
     # Overall Verdict and Score based on Cross-Document Identity and Forensic Findings
     critical_count = sum(1 for d in discrepancies_list if d.get("severity") == "CRITICAL")
