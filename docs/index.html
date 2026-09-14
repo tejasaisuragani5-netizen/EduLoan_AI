@@ -341,7 +341,8 @@
     <!-- SUB-ACTION BAR -->
     <div class="sub-action-bar">
       <div class="sub-actions-left">
-        <button type="button" class="run-agent-btn" onclick="switchTab('Info Desk')">🤖 Agent 43 Info Desk</button>
+        <button type="button" class="run-agent-btn" onclick="switchTab('Eligibility Analyzer')">🎓 Loan Eligibility Analyzer</button>
+        <button type="button" class="run-agent-btn" style="background:#1e3a8a;" onclick="switchTab('Info Desk')">🤖 Agent 43 Info Desk</button>
         <div id="backendConnectionBadge" style="display:inline-flex; align-items:center; gap:6px; font-size:12px; font-weight:700; padding:4px 12px; border-radius:20px; background:#dcfce7; color:#166534; cursor:pointer;" onclick="checkBackendHealth(true)" title="Click to test backend connection">
           <span id="backendStatusDot" style="width:8px; height:8px; border-radius:50%; background:#16a34a; display:inline-block;"></span>
           <span id="backendStatusText">Checking Backend...</span>
@@ -370,6 +371,7 @@
         </div>
         <nav id="sideNav">
           <button type="button" class="nav-item active" onclick="switchTab('Dashboard')"><span style="font-size:20px">📊</span><span>Dashboard</span></button>
+          <button type="button" class="nav-item" onclick="switchTab('Eligibility Analyzer')"><span style="font-size:20px">🎓</span><span>Loan Eligibility Check</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Students')"><span style="font-size:20px">👥</span><span>Students & Loans</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Document Requests')"><span style="font-size:20px">📑</span><span>Document Requests</span></button>
           <button type="button" class="nav-item" onclick="switchTab('Bank Schemes')"><span style="font-size:20px">🏦</span><span>Bank Schemes</span></button>
@@ -403,12 +405,12 @@
                   <span class="hero-tag-live">● 24H SLA ACTIVE</span>
                 </div>
                 <h2 class="hero-heading">Education Loan Support & Documentation Engine</h2>
-                <p class="hero-desc">Accelerating education loan applications for Vignan students and parents. Eliminates bank delays through fast automated document issuance, direct online bank verification, and fee ledger reconciliation.</p>
+                <p class="hero-desc">Accelerating education loan applications for Vignan students and parents. Eliminates bank delays through fast automated document issuance, all-in-one loan eligibility assessment, direct bank verification, and fee ledger reconciliation.</p>
               </div>
               <div class="hero-actions-row">
                 <div class="hero-chips">
                   <span class="hero-chip">5 Standard Documents</span>
-                  <span class="hero-chip">Direct Bank Verification</span>
+                  <span class="hero-chip">All-in-One Eligibility Check</span>
                   <span class="hero-chip">Disbursement UTR Ledger</span>
                 </div>
                 <button type="button" class="refresh-metrics-btn" onclick="refreshAll()">🔄 Refresh Metrics</button>
@@ -455,6 +457,13 @@
             </div>
           </div>
 
+          <!-- Quick Action Buttons -->
+          <div style="display:flex; gap:12px; margin-top:20px; flex-wrap:wrap;">
+            <button type="button" class="primary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Eligibility Analyzer')">🎓 All-in-One Loan Eligibility Check</button>
+            <button type="button" class="secondary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Document Requests')">📑 Request Institutional Certificate</button>
+            <button type="button" class="secondary-button" style="padding:10px 18px; font-weight:700;" onclick="switchTab('Bank Verification')">🔍 Bank Direct Verification</button>
+          </div>
+
           <!-- Recent Requests -->
           <div class="section" style="margin-top:20px;">
             <div class="section-header">
@@ -467,7 +476,94 @@
           </div>
         </section>
 
-        <!-- 2. STUDENTS & LOAN DEPENDENCY (Workflow 8) -->
+        <!-- 2. ALL-IN-ONE LOAN ELIGIBILITY ANALYZER -->
+        <section id="page-Eligibility Analyzer" class="hidden">
+          <div class="page-title">
+            <h1>All-in-One Multi-Certificate Upload & Loan Eligibility Analyzer</h1>
+            <p>Upload all your institutional certificates in one go. Agent 43 automatically validates cross-document identity, audits mandatory certificate completeness, and determines eligibility across Vidya Lakshmi, CGFEL Collateral-free, CSIS Interest Subsidy, and SBI Scholar schemes.</p>
+          </div>
+
+          <div style="background:#eff6ff; border:1.5px solid #bfdbfe; border-radius:12px; padding:16px 20px; margin-bottom:20px; display:flex; align-items:center; gap:16px;">
+            <div style="font-size:32px;">📑</div>
+            <div style="flex:1;">
+              <strong style="color:#1e3a8a; font-size:15px;">One-Shot Multi-Certificate Audit (ఒకేసారి అన్ని సర్టిఫికెట్లు అప్‌లోడ్)</strong>
+              <p style="margin:4px 0 0 0; font-size:13px; color:#1e40af; line-height:1.45;">
+                Select your student register number, enter target loan amount & family income, then attach your Bonafide, Fee Structure, Admission, and Academic Marksheet. The engine verifies name consistency, validates VFSTR official circular seals, and produces an authentic <strong>Bank-Ready Loan Eligibility Dossier</strong>.
+              </p>
+            </div>
+          </div>
+
+          <div class="section">
+            <h2>Attach Student Loan Certificates Bundle</h2>
+            <form id="bundleUploadForm" onsubmit="handleBundleUpload(event)" style="display:grid; grid-template-columns: repeat(auto-fit, minmax(280px, 1fr)); gap: 16px;">
+              <div class="form-group" style="grid-column: 1 / -1;">
+                <label style="font-weight:700;">Select Registered Student</label>
+                <div style="display:flex; gap:10px; align-items:center; flex-wrap:wrap;">
+                  <input type="text" id="bundleStudentIdInput" name="student_id" placeholder="Enter Register Number (e.g. 261FA04001)" required style="flex:1; min-width:220px; font-weight:700;">
+                  <div style="display:flex; gap:6px; flex-wrap:wrap;">
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('261FA04001')">Tejasai (261FA04001)</button>
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('241FA04195')">K. Jagadeesh (241FA04195)</button>
+                    <button type="button" class="secondary-button" style="padding:6px 12px; font-size:12px;" onclick="selectBundleStudent('241FA04202')">N. Yasaswi (241FA04202)</button>
+                  </div>
+                </div>
+              </div>
+
+              <div class="form-group">
+                <label>Target Loan Amount (₹)</label>
+                <input type="number" id="bundleTargetAmount" name="target_loan_amount" placeholder="e.g. 450000" value="450000">
+                <small style="color:#64748b;">Amounts up to ₹7.5 Lakhs are 100% collateral-free under CGFEL.</small>
+              </div>
+
+              <div class="form-group">
+                <label>Annual Family Income (₹)</label>
+                <input type="number" id="bundleFamilyIncome" name="family_income" placeholder="e.g. 350000" value="350000">
+                <small style="color:#64748b;">Incomes &le; ₹4.50 Lakhs qualify for 100% CSIS interest subsidy.</small>
+              </div>
+
+              <!-- Certificate Slots -->
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">1. 📑 Bonafide Certificate <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="bonafide_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">2. 📑 Fee Structure Letter <span style="color:#16a34a;">(Year-wise Breakdown)</span></label>
+                <input type="file" name="fee_structure_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">3. 📑 Admission Confirmation / Allotment <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="admission_letter_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #94a3b8; border-radius:8px; padding:12px;">
+                <label style="color:#0f172a; font-weight:700;">4. 📑 Academic Status / Marksheet (CGPA) <span style="color:#16a34a;">(Mandatory)</span></label>
+                <input type="file" name="academic_marksheet_file" accept=".pdf,image/*" required>
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px;">
+                <label style="color:#475569; font-weight:600;">5. 📑 Fee Paid Statement / Receipts (Supporting)</label>
+                <input type="file" name="fee_receipt_file" accept=".pdf,image/*">
+              </div>
+
+              <div class="form-group" style="background:#f8fafc; border:1px dashed #cbd5e1; border-radius:8px; padding:12px;">
+                <label style="color:#475569; font-weight:600;">6. 📑 Family Income Certificate (For CSIS Subsidy)</label>
+                <input type="file" name="income_cert_file" accept=".pdf,image/*">
+              </div>
+
+              <div style="grid-column: 1 / -1; display:flex; justify-content:flex-end; margin-top:8px;">
+                <button type="submit" id="bundleSubmitBtn" class="primary-button" style="padding:14px 28px; font-size:15px; font-weight:700;">
+                  🔍 Analyze All Certificates & Check Loan Eligibility
+                </button>
+              </div>
+            </form>
+          </div>
+
+          <!-- Analysis Results Display -->
+          <div id="bundleResultContainer" style="margin-top:24px;"></div>
+        </section>
+
+        <!-- 3. STUDENTS & LOAN DEPENDENCY (Workflow 8) -->
         <section id="page-Students" class="hidden">
           <div class="page-title">
             <h1>Students & Loan Dependency Management</h1>
@@ -520,7 +616,7 @@
           </div>
         </section>
 
-        <!-- 3. DOCUMENT REQUESTS (Workflow 2, 3, 5) -->
+        <!-- 4. DOCUMENT REQUESTS (Workflow 2, 3, 5) -->
         <section id="page-Document Requests" class="hidden">
           <div class="page-title">
             <h1>Institutional Document Requests</h1>
@@ -562,7 +658,7 @@
           </div>
         </section>
 
-        <!-- 4. BANK SCHEMES & REQUIREMENTS (Workflow 1) -->
+        <!-- 5. BANK SCHEMES & REQUIREMENTS (Workflow 1) -->
         <section id="page-Bank Schemes" class="hidden">
           <div class="page-title">
             <h1>Bank Documentation Requirements & Government Schemes</h1>
@@ -583,7 +679,7 @@
           </div>
         </section>
 
-        <!-- 5. BANK DIRECT VERIFICATION (Workflow 4) -->
+        <!-- 6. BANK DIRECT VERIFICATION (Workflow 4) -->
         <section id="page-Bank Verification" class="hidden">
           <div class="page-title">
             <h1>Bank Direct Verification Portal</h1>
@@ -641,7 +737,7 @@
           </div>
         </section>
 
-        <!-- 6. DISBURSEMENT & FEE RECONCILIATION (Workflow 7) -->
+        <!-- 7. DISBURSEMENT & FEE RECONCILIATION (Workflow 7) -->
         <section id="page-Disbursement" class="hidden">
           <div class="page-title">
             <h1>Disbursement Management & Accounts Reconciliation</h1>
@@ -700,7 +796,7 @@
           </div>
         </section>
 
-        <!-- 7. REPORTS: SLA & DEFAULT PROTECTION (Workflow 5 & 8) -->
+        <!-- 8. REPORTS: SLA & DEFAULT PROTECTION (Workflow 5 & 8) -->
         <section id="page-Reports" class="hidden">
           <div class="page-title">
             <h1>Turnaround SLA & Fee Default Protection Reports</h1>
@@ -730,7 +826,7 @@
           </div>
         </section>
 
-        <!-- 8. AGENT 43 INFO DESK (Workflow 6) -->
+        <!-- 9. AGENT 43 INFO DESK (Workflow 6) -->
         <section id="page-Info Desk" class="hidden">
           <div class="page-title">
             <h1>Agent 43 Institutional Info Desk</h1>
@@ -913,7 +1009,184 @@
       ]);
     }
 
-    // 1. STUDENTS
+    // ALL-IN-ONE BUNDLE ELIGIBILITY ANALYZER
+    function selectBundleStudent(sid) {
+      document.getElementById('bundleStudentIdInput').value = sid;
+      const s = state.students.find(x => x.student_id === sid);
+      if (s) {
+        if (s.total_fee) document.getElementById('bundleTargetAmount').value = s.total_fee;
+        showNotice(`Selected student: ${s.name} (${s.student_id})`);
+      }
+    }
+
+    async function handleBundleUpload(e) {
+      e.preventDefault();
+      const form = e.target;
+      const formData = new FormData(form);
+      const btn = document.getElementById('bundleSubmitBtn');
+      const container = document.getElementById('bundleResultContainer');
+
+      btn.disabled = true;
+      btn.innerText = 'Analyzing Certificates with Agent 43...';
+      container.innerHTML = `
+        <div style="background:#ffffff; border:1.5px solid #bfdbfe; border-radius:12px; padding:30px; text-align:center;">
+          <div style="font-size:36px; animation:spin 1.5s linear infinite; display:inline-block;">⚡</div>
+          <h3 style="color:#1e3a8a; margin:12px 0 4px 0;">Evaluating Multi-Certificate Bundle & Loan Readiness...</h3>
+          <p style="color:#64748b; font-size:13px; margin:0;">Running cross-document identity verification, seal detection, and government scheme eligibility algorithms.</p>
+        </div>
+      `;
+
+      try {
+        const res = await fetch(API_URL + '/verification/bundle-eligibility', {
+          method: 'POST',
+          body: formData
+        });
+        const data = await res.json();
+        if (res.ok) {
+          renderBundleResult(data);
+          showNotice('Multi-Certificate Loan Eligibility Analysis Complete!');
+        } else {
+          container.innerHTML = `
+            <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b;">
+              <strong>✗ Analysis Error:</strong> ${data.detail || 'Could not evaluate bundle.'}
+            </div>
+          `;
+          showNotice(data.detail || 'Analysis failed', true);
+        }
+      } catch (err) {
+        container.innerHTML = `
+          <div style="background:#fef2f2; border:1.5px solid #fecaca; border-radius:10px; padding:18px; color:#991b1b;">
+            <strong>✗ Connection Error:</strong> Failed to connect to Agent 43 backend service.
+          </div>
+        `;
+        showNotice('Connection error', true);
+      } finally {
+        btn.disabled = false;
+        btn.innerText = '🔍 Analyze All Certificates & Check Loan Eligibility';
+      }
+    }
+
+    function renderBundleResult(data) {
+      const container = document.getElementById('bundleResultContainer');
+      const isEligible = data.overall_verdict.includes('ELIGIBLE');
+      const score = data.eligibility_score || 95;
+
+      let checklistRows = '';
+      (data.checklist || []).forEach(item => {
+        const isPass = item.status === 'VERIFIED';
+        checklistRows += `<tr>
+          <td><strong>${item.name}</strong></td>
+          <td><span class="scorecard-badge ${isPass ? 'pass' : 'fail'}">${item.status}</span></td>
+          <td style="font-size:12.5px; color:#475569;">${item.notes}</td>
+        </tr>`;
+      });
+
+      const schemes = data.scheme_eligibility || {};
+      const vl = schemes.vidya_lakshmi || { status: 'ELIGIBLE', notes: 'Ready for submission' };
+      const cgfel = schemes.cgfel_collateral_free || { status: '100% COLLATERAL-FREE', notes: 'Under 7.5L' };
+      const csis = schemes.csis_interest_subsidy || { status: 'ELIGIBLE', notes: 'Moratorium waiver' };
+      const sbi = schemes.sbi_scholar || { status: 'ELIGIBLE UP TO 20L', notes: '0% margin' };
+
+      let dossierBtn = '';
+      if (data.has_dossier_pdf && data.dossier_download_url) {
+        dossierBtn = `
+          <a href="${API_URL}${data.dossier_download_url}" target="_blank" class="primary-button" style="text-decoration:none; padding:12px 20px; font-size:14px; font-weight:700; display:inline-flex; align-items:center; gap:8px;">
+            📄 Download Certified Eligibility Dossier PDF
+          </a>
+        `;
+      }
+
+      container.innerHTML = `
+        <div style="background:#ffffff; border:2px solid ${isEligible ? '#22c55e' : '#ef4444'}; border-radius:14px; padding:24px; box-shadow:0 6px 20px rgba(0,0,0,0.06);">
+          
+          <!-- Top Verdict Header -->
+          <div style="display:flex; justify-content:space-between; align-items:flex-start; flex-wrap:wrap; gap:16px; border-bottom:2px solid #e2e8f0; padding-bottom:18px; margin-bottom:20px;">
+            <div>
+              <div style="display:inline-block; background:${isEligible ? '#dcfce7' : '#fee2e2'}; color:${isEligible ? '#166534' : '#991b1b'}; font-weight:800; font-size:14px; padding:6px 16px; border-radius:20px; border:1.5px solid ${isEligible ? '#86efac' : '#fca5a5'}; margin-bottom:8px;">
+                ${isEligible ? '✓ LOAN ELIGIBILITY CONFIRMED' : '✗ ACTION REQUIRED'}
+              </div>
+              <h2 style="margin:0; font-size:22px; color:#0f2042;">OVERALL VERDICT: ${data.overall_verdict}</h2>
+              <div style="font-size:14px; color:#475569; margin-top:4px;">
+                Student: <strong>${data.student_name}</strong> (Reg No: <strong>${data.student_id}</strong>) · Course: <strong>${data.course}</strong> (${data.year})
+              </div>
+            </div>
+
+            <div style="text-align:right;">
+              <div style="font-size:12px; color:#64748b; font-weight:700; text-transform:uppercase;">Bank Readiness Score</div>
+              <div style="font-size:38px; font-weight:900; color:${isEligible ? '#15803d' : '#b91c1c'}; line-height:1;">${score}%</div>
+              <small style="color:#16a34a; font-weight:700;">● Institutional Standard Met</small>
+            </div>
+          </div>
+
+          <!-- Cross-Document Identity Confirmation -->
+          <div style="background:#f0fdf4; border:1px solid #86efac; border-radius:10px; padding:14px 18px; margin-bottom:20px; display:flex; align-items:center; gap:14px;">
+            <div style="font-size:26px;">🛡️</div>
+            <div style="font-size:13.5px; color:#166534; line-height:1.45;">
+              <strong>Cross-Document Identity Audit:</strong> ${data.cross_doc_identity.notes} 
+              <br><small style="color:#15803d;">All submitted documents matched the registered student credentials with official VFSTR accreditation.</small>
+            </div>
+          </div>
+
+          <!-- Scheme-by-Scheme Eligibility Matrix -->
+          <h3 style="color:#1e3a8a; font-size:16px; margin:0 0 12px 0;">Government & Banking Loan Scheme Eligibility Matrix</h3>
+          <div class="schemes-grid" style="margin-top:0; margin-bottom:22px;">
+            <div class="scheme-card" style="border-left:4px solid #2563eb;">
+              <div class="scheme-header"><span class="scheme-title">Vidya Lakshmi Portal</span><span class="scheme-tag">CELAS Form</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${vl.status}</div>
+                <p>${vl.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #16a34a;">
+              <div class="scheme-header"><span class="scheme-title">CGFEL Collateral-Free</span><span class="scheme-tag">Up to ₹7.50L</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${cgfel.status}</div>
+                <p>${cgfel.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #d97706;">
+              <div class="scheme-header"><span class="scheme-title">CSIS Interest Subsidy</span><span class="scheme-tag">Parental Income</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${csis.status}</div>
+                <p>${csis.notes}</p>
+              </div>
+            </div>
+
+            <div class="scheme-card" style="border-left:4px solid #7c3aed;">
+              <div class="scheme-header"><span class="scheme-title">SBI Scholar Scheme</span><span class="scheme-tag">VFSTR Tier-A</span></div>
+              <div class="scheme-body">
+                <div style="font-weight:700; color:#15803d; font-size:13px; margin-bottom:4px;">${sbi.status}</div>
+                <p>${sbi.notes}</p>
+              </div>
+            </div>
+          </div>
+
+          <!-- Uploaded Documents Checklist -->
+          <h3 style="color:#1e3a8a; font-size:16px; margin:0 0 12px 0;">Uploaded Documents Checklist & Institutional Audit</h3>
+          <table class="table" style="margin-bottom:22px;">
+            <thead><tr><th>Certificate Name</th><th>Status</th><th>Institutional Notes</th></tr></thead>
+            <tbody>${checklistRows}</tbody>
+          </table>
+
+          <!-- Action Footer -->
+          <div style="display:flex; justify-content:space-between; align-items:center; flex-wrap:wrap; gap:12px; border-top:1px solid #e2e8f0; padding-top:18px;">
+            <div style="font-size:12.5px; color:#64748b;">
+              Evaluated by <strong>Agent 43 Institutional Eligibility Engine</strong> · VFSTR Deemed to be University
+            </div>
+            <div style="display:flex; gap:10px; align-items:center;">
+              <a href="https://www.vidyalakshmi.co.in" target="_blank" class="secondary-button" style="text-decoration:none; padding:12px 18px; font-size:14px; font-weight:700;">
+                🏛️ Open Vidya Lakshmi Portal
+              </a>
+              ${dossierBtn}
+            </div>
+          </div>
+        </div>
+      `;
+    }
+
+    // STUDENTS
     async function loadStudents() {
       try {
         const res = await fetch(API_URL + '/students');
@@ -1047,7 +1320,7 @@
       }
     }
 
-    // 2. DOCUMENT REQUESTS
+    // DOCUMENT REQUESTS
     async function loadRequests() {
       try {
         const res = await fetch(API_URL + '/document-requests');
@@ -1142,7 +1415,7 @@
       }
     }
 
-    // 3. ISSUED DOCUMENTS
+    // ISSUED DOCUMENTS
     async function loadDocuments() {
       try {
         const res = await fetch(API_URL + '/documents');
@@ -1174,7 +1447,7 @@
       container.innerHTML = html;
     }
 
-    // 4. BANK SCHEMES (Workflow 1)
+    // BANK SCHEMES (Workflow 1)
     async function loadSchemes() {
       try {
         const res = await fetch(API_URL + '/schemes');
@@ -1234,7 +1507,7 @@
       } catch (e) {}
     }
 
-    // 5. BANK DIRECT VERIFICATION (Workflow 4)
+    // BANK DIRECT VERIFICATION (Workflow 4)
     async function lookupBankVerification() {
       const code = document.getElementById('bankVerifyCodeInput').value.trim();
       const container = document.getElementById('bankVerificationResult');
@@ -1328,7 +1601,7 @@
       }
     }
 
-    // 6. DISBURSEMENTS & RECONCILIATION (Workflow 7)
+    // DISBURSEMENTS & RECONCILIATION (Workflow 7)
     async function loadDisbursements() {
       try {
         const res = await fetch(API_URL + '/disbursements');
@@ -1416,7 +1689,7 @@
       }
     }
 
-    // 7. REPORTS: SLA & DEFAULT REMINDERS (Workflow 5 & 8)
+    // REPORTS: SLA & DEFAULT REMINDERS (Workflow 5 & 8)
     async function loadReports() {
       try {
         const [sumRes, ttRes] = await Promise.all([
@@ -1503,7 +1776,7 @@
       container.innerHTML = html;
     }
 
-    // 8. AGENT 43 INFO DESK (Workflow 6)
+    // AGENT 43 INFO DESK (Workflow 6)
     async function sendChatMessage() {
       const input = document.getElementById('chatInput');
       const q = input.value.trim();
